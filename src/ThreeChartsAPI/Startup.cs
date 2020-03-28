@@ -1,8 +1,11 @@
+using EFCore.NamingConventions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using ThreeChartsAPI.Models;
 
 namespace ThreeChartsAPI
 {
@@ -18,6 +21,11 @@ namespace ThreeChartsAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddDbContext<ThreeChartsContext>(options =>
+            {
+                options.UseNpgsql(Configuration.GetConnectionString("ThreeChartsDB"));
+                options.UseSnakeCaseNamingConvention();
+            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
