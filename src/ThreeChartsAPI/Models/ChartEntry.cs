@@ -1,6 +1,9 @@
+using System;
+using System.Diagnostics.CodeAnalysis;
+
 namespace ThreeChartsAPI.Models
 {
-    public class ChartEntry
+    public class ChartEntry : IEquatable<ChartEntry>
     {
         public int Id { get; set; }
         public ChartEntryType Type { get; set; }
@@ -18,6 +21,18 @@ namespace ThreeChartsAPI.Models
 
         public int WeekId { get; set; }
         public ChartWeek Week { get; set; } = null!;
+
+        public bool Equals(ChartEntry other)
+        {
+            return Id == other.Id
+                && Type == other.Type
+                && Stat == other.Stat
+                && StatText == other.StatText
+                && TrackId == other.TrackId
+                && AlbumId == other.AlbumId
+                && ArtistId == other.ArtistId
+                && WeekId == other.WeekId;
+        }
     }
 
     public enum ChartEntryType { Album, Artist, Track }
