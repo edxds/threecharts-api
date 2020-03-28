@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace ThreeChartsAPI.Models
 {
@@ -13,5 +14,7 @@ namespace ThreeChartsAPI.Models
         public string? ProfilePicture { get; set; }
 
         public DateTime RegisteredAt { get; set; }
+
+        public List<ChartWeek> ChartWeeks { get; set; } = null!;
     }
 }

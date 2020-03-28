@@ -10,6 +10,9 @@ namespace ThreeChartsAPI.Models
         public DateTime From { get; set; }
         public DateTime To { get; set; }
 
+        public int OwnerId { get; set; }
+        public User Owner { get; set; } = null!;
+
         public List<ChartEntry> ChartEntries { get; set; } = null!;
 
         public bool Equals(ChartWeek other)
