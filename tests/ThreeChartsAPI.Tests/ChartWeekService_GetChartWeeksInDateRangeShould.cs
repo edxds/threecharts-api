@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using FluentAssertions;
 using ThreeChartsAPI.Models;
 using ThreeChartsAPI.Services;
 using Xunit;
@@ -37,7 +38,8 @@ namespace ThreeChartsAPI.Tests
                 },
             };
 
-            Assert.Equal(expectedWeeks, _service.GetChartWeeksInDateRange(startDate, endDate));
+            var actualWeeks = _service.GetChartWeeksInDateRange(startDate, endDate);
+            actualWeeks.Should().BeEquivalentTo(expectedWeeks);
         }
 
         [Fact]
@@ -68,7 +70,8 @@ namespace ThreeChartsAPI.Tests
                 },
             };
 
-            Assert.Equal(expectedWeeks, _service.GetChartWeeksInDateRange(startDate, endDate));
+            var actualWeeks = _service.GetChartWeeksInDateRange(startDate, endDate);
+            actualWeeks.Should().BeEquivalentTo(expectedWeeks);
         }
 
         [Fact]
@@ -79,7 +82,8 @@ namespace ThreeChartsAPI.Tests
 
             var expectedWeeks = new List<ChartWeek>();
 
-            Assert.Equal(expectedWeeks, _service.GetChartWeeksInDateRange(startDate, endDate));
+            var actualWeeks = _service.GetChartWeeksInDateRange(startDate, endDate);
+            actualWeeks.Should().BeEquivalentTo(expectedWeeks);
         }
     }
 }
