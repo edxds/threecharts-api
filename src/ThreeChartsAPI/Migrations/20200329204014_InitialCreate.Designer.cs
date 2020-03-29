@@ -10,14 +10,14 @@ using ThreeChartsAPI.Models;
 namespace ThreeChartsAPI.Migrations
 {
     [DbContext(typeof(ThreeChartsContext))]
-    [Migration("20200329194013_ChartEntryAddRank")]
-    partial class ChartEntryAddRank
+    [Migration("20200329204014_InitialCreate")]
+    partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("Npgsql:Enum:chart_entry_stat", "new,reentry,increase,decrease")
+                .HasAnnotation("Npgsql:Enum:chart_entry_stat", "new,reentry,no_diff,increase,decrease")
                 .HasAnnotation("Npgsql:Enum:chart_entry_type", "album,artist,track")
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
                 .HasAnnotation("ProductVersion", "3.1.3")

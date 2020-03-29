@@ -10,7 +10,7 @@ namespace ThreeChartsAPI.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterDatabase()
-                .Annotation("Npgsql:Enum:chart_entry_stat", "new,reentry,increase,decrease")
+                .Annotation("Npgsql:Enum:chart_entry_stat", "new,reentry,no_diff,increase,decrease")
                 .Annotation("Npgsql:Enum:chart_entry_type", "album,artist,track");
 
             migrationBuilder.CreateTable(
@@ -100,6 +100,7 @@ namespace ThreeChartsAPI.Migrations
                 {
                     id = table.Column<int>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    rank = table.Column<int>(nullable: false),
                     type = table.Column<ChartEntryType>(nullable: false),
                     stat = table.Column<ChartEntryStat>(nullable: false),
                     stat_text = table.Column<string>(nullable: false),

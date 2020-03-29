@@ -15,7 +15,7 @@ namespace ThreeChartsAPI.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("Npgsql:Enum:chart_entry_stat", "new,reentry,increase,decrease")
+                .HasAnnotation("Npgsql:Enum:chart_entry_stat", "new,reentry,no_diff,increase,decrease")
                 .HasAnnotation("Npgsql:Enum:chart_entry_type", "album,artist,track")
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
                 .HasAnnotation("ProductVersion", "3.1.3")
