@@ -82,6 +82,7 @@ namespace ThreeChartsAPI.Services
                 {
                     Week = chartWeek,
                     Type = ChartEntryType.Track,
+                    Rank = lastFmEntry.Rank,
                     Track = await GetTrackOrCreate(lastFmEntry.Artist, lastFmEntry.Title),
                 })
                 .Select(task => task.Result);
@@ -91,6 +92,7 @@ namespace ThreeChartsAPI.Services
                 {
                     Week = chartWeek,
                     Type = ChartEntryType.Album,
+                    Rank = lastFmEntry.Rank,
                     Album = await GetAlbumOrCreate(lastFmEntry.Artist, lastFmEntry.Title)
                 })
                 .Select(task => task.Result);
@@ -100,6 +102,7 @@ namespace ThreeChartsAPI.Services
                 {
                     Week = chartWeek,
                     Type = ChartEntryType.Artist,
+                    Rank = lastFmEntry.Rank,
                     Artist = await GetArtistOrCreate(lastFmEntry.Name)
                 })
                 .Select(task => task.Result);

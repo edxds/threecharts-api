@@ -6,6 +6,9 @@ namespace ThreeChartsAPI.Models
     public class ChartEntry : IEquatable<ChartEntry>
     {
         public int Id { get; set; }
+
+        public int Rank { get; set; }
+
         public ChartEntryType Type { get; set; }
         public ChartEntryStat Stat { get; set; }
         public string StatText { get; set; } = null!;
