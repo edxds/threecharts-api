@@ -11,7 +11,7 @@ namespace ThreeChartsAPI.Models
 
         public ChartEntryType Type { get; set; }
         public ChartEntryStat Stat { get; set; }
-        public string StatText { get; set; } = null!;
+        public string? StatText { get; set; }
 
         public int? TrackId { get; set; }
         public Track? Track { get; set; }
