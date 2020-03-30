@@ -9,6 +9,20 @@ namespace ThreeChartsAPI.Services.LastFm
 {
     public class LastFmJsonDeserializer : ILastFmDeserializer
     {
+        public async Task<LastFmSession> DeserializeSession(Stream json)
+        {
+            using (var document = await JsonDocument.ParseAsync(json))
+            {
+                var session = document.RootElement.GetProperty("session");
+
+                return new LastFmSession()
+                {
+                    LastFmUser = session.GetProperty("name").GetString(),
+                    Key = session.GetProperty("key").GetString(),
+                };
+            }
+        }
+
         public async Task<LastFmChart<LastFmChartTrack>> DeserializeTrackChart(Stream json)
         {
             using (var jsonDocument = await JsonDocument.ParseAsync(json))

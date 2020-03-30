@@ -141,5 +141,15 @@ namespace ThreeChartsAPI.Tests
                 }
             }
         ";
+
+        public static string SessionJson = @"
+            {
+                ""session"": {
+                    ""subscriber"": 0,
+                    ""name"": ""edxds"",
+                    ""key"": ""session_key""
+                }
+            }
+        ";
     }
 }

@@ -6,6 +6,7 @@ namespace ThreeChartsAPI.Services.LastFm
 {
     public interface ILastFmDeserializer
     {
+        Task<LastFmSession> DeserializeSession(Stream json);
         Task<LastFmChart<LastFmChartTrack>> DeserializeTrackChart(Stream json);
         Task<LastFmChart<LastFmChartAlbum>> DeserializeAlbumChart(Stream json);
         Task<LastFmChart<LastFmChartArtist>> DeserializeArtistChart(Stream json);
