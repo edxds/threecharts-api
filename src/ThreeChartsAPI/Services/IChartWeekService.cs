@@ -9,5 +9,6 @@ namespace ThreeChartsAPI.Services
     {
         List<ChartWeek> GetChartWeeksInDateRange(DateTime startDate, DateTime endDate);
         Task<List<ChartEntry>> CreateEntriesForChartWeek(ChartWeek chartWeek);
+        (ChartEntryStat stat, string? statText) GetStatsForChartEntry(ChartEntry entry, List<ChartWeek> weeks);
     }
 }
