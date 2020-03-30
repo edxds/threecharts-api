@@ -64,7 +64,7 @@ namespace ThreeChartsAPI.Tests
         [Fact]
         public async Task OnboardUser_WithGenericUser_SavesWeeksCorrectly()
         {
-            var user = new User() { DisplayName = "edxds", RegisteredAt = userRegisterDate };
+            var user = new User() { UserName = "edxds", RegisteredAt = userRegisterDate };
             await context.Users.AddAsync(user);
             await context.SaveChangesAsync();
 

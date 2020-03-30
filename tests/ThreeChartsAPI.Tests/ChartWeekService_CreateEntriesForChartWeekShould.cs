@@ -40,7 +40,7 @@ namespace ThreeChartsAPI.Tests
             var context = ThreeChartsTestContext.BuildInMemoryContext();
             var chartWeekService = new ChartWeekService(context, lastFm.Object);
 
-            var user = new User() { DisplayName = "edxds" };
+            var user = new User() { UserName = "edxds" };
             var defaultWeek = new ChartWeek()
             {
                 Owner = user,

@@ -63,7 +63,7 @@ namespace ThreeChartsAPI.Services
 
         public async Task<List<ChartEntry>> CreateEntriesForChartWeek(ChartWeek chartWeek)
         {
-            var user = chartWeek.Owner.DisplayName;
+            var user = chartWeek.Owner.UserName;
             var from = ((DateTimeOffset)chartWeek.From).ToUnixTimeMilliseconds();
             var to = ((DateTimeOffset)chartWeek.To).ToUnixTimeMilliseconds();
 

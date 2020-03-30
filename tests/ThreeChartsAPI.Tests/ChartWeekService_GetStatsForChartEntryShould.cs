@@ -76,7 +76,7 @@ namespace ThreeChartsAPI.Tests
             for (int i = 0; i < 3; i++)
             {
                 var week = new ChartWeek();
-                week.Owner = new User() { DisplayName = "edxds" };
+                week.Owner = new User() { UserName = "edxds" };
 
                 await _service.CreateEntriesForChartWeek(week);
             }
