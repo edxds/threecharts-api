@@ -23,6 +23,25 @@ namespace ThreeChartsAPI.Services.LastFm
             }
         }
 
+        public async Task<LastFmUserInfo> DeserializeUserInfo(Stream json)
+        {
+            using (var document = await JsonDocument.ParseAsync(json))
+            {
+                var user = document.RootElement.GetProperty("user");
+                var images = user.GetProperty("image").EnumerateArray();
+                var registerDate = user.GetProperty("registered").GetProperty("unixtime").GetString();
+
+                return new LastFmUserInfo()
+                {
+                    Name = user.GetProperty("name").GetString(),
+                    Url = user.GetProperty("url").GetString(),
+                    Image = images.Last().GetProperty("#text").GetString(),
+                    RegisterDate = Convert.ToInt64(registerDate),
+                    RealName = user.GetProperty("realname").GetString(),
+                };
+            }
+        }
+
         public async Task<LastFmChart<LastFmChartTrack>> DeserializeTrackChart(Stream json)
         {
             using (var jsonDocument = await JsonDocument.ParseAsync(json))

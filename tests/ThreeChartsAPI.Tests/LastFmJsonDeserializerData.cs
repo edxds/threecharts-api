@@ -151,5 +151,45 @@ namespace ThreeChartsAPI.Tests
                 }
             }
         ";
+
+        public static string UserInfoJson = @"
+            {
+                ""user"": {
+                    ""playlists"": ""0"",
+                    ""playcount"": ""14800"",
+                    ""gender"": ""n"",
+                    ""name"": ""edxds"",
+                    ""subscriber"": ""0"",
+                    ""url"": ""https://www.last.fm/user/edxds"",
+                    ""country"": ""None"",
+                    ""image"": [
+                        {
+                            ""size"": ""small"",
+                            ""#text"": ""https://lastfm.freetls.fastly.net/i/u/34s/e4612070134f0e1b58968471969d54da.png""
+                        },
+                        {
+                            ""size"": ""medium"",
+                            ""#text"": ""https://lastfm.freetls.fastly.net/i/u/64s/e4612070134f0e1b58968471969d54da.png""
+                        },
+                        {
+                            ""size"": ""large"",
+                            ""#text"": ""https://lastfm.freetls.fastly.net/i/u/174s/e4612070134f0e1b58968471969d54da.png""
+                        },
+                        {
+                            ""size"": ""extralarge"",
+                            ""#text"": ""https://lastfm.freetls.fastly.net/i/u/300x300/e4612070134f0e1b58968471969d54da.png""
+                        }
+                    ],
+                    ""registered"": {
+                        ""unixtime"": ""1501983583"",
+                        ""#text"": 1501983583
+                    },
+                    ""type"": ""user"",
+                    ""age"": ""0"",
+                    ""bootstrap"": ""0"",
+                    ""realname"": """"
+                }
+            }
+        ";
     }
 }
