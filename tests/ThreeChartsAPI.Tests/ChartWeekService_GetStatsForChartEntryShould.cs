@@ -7,6 +7,7 @@ using ThreeChartsAPI.Models;
 using ThreeChartsAPI.Models.LastFm;
 using ThreeChartsAPI.Services;
 using ThreeChartsAPI.Services.LastFm;
+using Xunit;
 
 namespace ThreeChartsAPI.Tests
 {
@@ -16,12 +17,9 @@ namespace ThreeChartsAPI.Tests
 
         public ChartWeekService_GetStatsForChartEntryShould()
         {
-            var anyString = It.IsAny<string>();
-            var anyLong = It.IsAny<long>();
-
             var lastFmMock = new Mock<ILastFmService>();
             lastFmMock
-                .SetupSequence(s => s.GetWeeklyTrackChart(anyString, anyLong, anyLong))
+                .SetupSequence(s => s.GetWeeklyTrackChart(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>()))
                 .ReturnsAsync(new LastFmChart<LastFmChartTrack>()
                 {
                     Entries = new List<LastFmChartTrack>()
@@ -53,14 +51,14 @@ namespace ThreeChartsAPI.Tests
                 });
 
             lastFmMock
-                .Setup(s => s.GetWeeklyAlbumChart(anyString, anyLong, anyLong))
+                .Setup(s => s.GetWeeklyAlbumChart(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>()))
                 .ReturnsAsync(new LastFmChart<LastFmChartAlbum>()
                 {
                     Entries = new List<LastFmChartAlbum>()
                 });
 
             lastFmMock
-                .Setup(s => s.GetWeeklyArtistChart(anyString, anyLong, anyLong))
+                .Setup(s => s.GetWeeklyArtistChart(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>()))
                 .ReturnsAsync(new LastFmChart<LastFmChartArtist>()
                 {
                     Entries = new List<LastFmChartArtist>()
@@ -70,6 +68,7 @@ namespace ThreeChartsAPI.Tests
             _service = new ChartWeekService(context, lastFmMock.Object);
         }
 
+        [Fact]
         public async Task GetStatsForChart_ReturnsCorrectStats()
         {
             var weeks = new List<ChartWeek>();
@@ -77,8 +76,10 @@ namespace ThreeChartsAPI.Tests
             {
                 var week = new ChartWeek();
                 week.Owner = new User() { UserName = "edxds" };
+                week.ChartEntries = await _service.CreateEntriesForChartWeek(week);
+                week.WeekNumber = i + 1;
 
-                await _service.CreateEntriesForChartWeek(week);
+                weeks.Add(week);
             }
 
             var firstWeekResults = weeks[0].ChartEntries.Select(entry

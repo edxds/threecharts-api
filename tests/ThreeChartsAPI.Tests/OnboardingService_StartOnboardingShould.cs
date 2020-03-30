@@ -26,12 +26,9 @@ namespace ThreeChartsAPI.Tests
 
         public OnboardingService_StartOnboardingShould()
         {
-            var anyString = It.IsAny<string>();
-            var anyLong = It.IsAny<long>();
-
             var lastFmMock = new Mock<ILastFmService>();
             lastFmMock
-                .Setup(s => s.GetWeeklyTrackChart(anyString, anyLong, anyLong))
+                .Setup(s => s.GetWeeklyTrackChart(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>()))
                 .ReturnsAsync(new LastFmChart<LastFmChartTrack>()
                 {
                     Entries = new List<LastFmChartTrack>()
@@ -44,14 +41,14 @@ namespace ThreeChartsAPI.Tests
                 });
 
             lastFmMock
-                .Setup(s => s.GetWeeklyAlbumChart(anyString, anyLong, anyLong))
+                .Setup(s => s.GetWeeklyAlbumChart(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>()))
                 .ReturnsAsync(new LastFmChart<LastFmChartAlbum>()
                 {
                     Entries = new List<LastFmChartAlbum>()
                 });
 
             lastFmMock
-                .Setup(s => s.GetWeeklyArtistChart(anyString, anyLong, anyLong))
+                .Setup(s => s.GetWeeklyArtistChart(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>()))
                 .ReturnsAsync(new LastFmChart<LastFmChartArtist>()
                 {
                     Entries = new List<LastFmChartArtist>()
