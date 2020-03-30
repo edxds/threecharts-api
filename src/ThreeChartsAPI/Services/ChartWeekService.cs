@@ -112,6 +112,15 @@ namespace ThreeChartsAPI.Services
 
         public (ChartEntryStat stat, string? statText) GetStatsForChartEntry(ChartEntry entry, List<ChartWeek> weeks)
         {
+            if (entry.Week.WeekNumber < 1)
+            {
+                throw new ArgumentOutOfRangeException(
+                    "entry.Week.WeekNumber",
+                    entry.Week.WeekNumber,
+                    "The entry's week number shouldn't be lower than 1!"
+                );
+            }
+
             var isFirstWeek = entry.Week.WeekNumber == 1;
             if (isFirstWeek)
             {
