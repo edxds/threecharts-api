@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using ThreeChartsAPI.Models;
 using ThreeChartsAPI.Services.LastFm;
@@ -61,7 +62,7 @@ namespace ThreeChartsAPI.Services
             return chartWeekList;
         }
 
-        public async Task<List<ChartEntry>> CreateEntriesForChartWeek(ChartWeek chartWeek)
+        public async Task<Result<List<ChartEntry>>> CreateEntriesForChartWeek(ChartWeek chartWeek)
         {
             var user = chartWeek.Owner.UserName;
             var from = ((DateTimeOffset)chartWeek.From).ToUnixTimeMilliseconds();
@@ -73,11 +74,17 @@ namespace ThreeChartsAPI.Services
 
             await Task.WhenAll(trackChartTask, albumChartTask, artistChartTask);
 
-            var trackChart = trackChartTask.Result;
-            var albumChart = albumChartTask.Result;
-            var artistChart = artistChartTask.Result;
+            var trackChartResult = trackChartTask.Result;
+            var albumChartResult = albumChartTask.Result;
+            var artistChartResult = artistChartTask.Result;
 
-            var trackEntries = trackChart.Entries
+            var mergedResults = Results.Merge(trackChartResult, albumChartResult, artistChartResult);
+            if (mergedResults.IsFailed)
+            {
+                return mergedResults.ToResult<List<ChartEntry>>();
+            }
+
+            var trackEntries = trackChartResult.Value.Entries
                 .Select(async lastFmEntry => new ChartEntry()
                 {
                     Week = chartWeek,
@@ -87,7 +94,7 @@ namespace ThreeChartsAPI.Services
                 })
                 .Select(task => task.Result);
 
-            var albumEntries = albumChart.Entries
+            var albumEntries = albumChartResult.Value.Entries
                 .Select(async lastFmEntry => new ChartEntry()
                 {
                     Week = chartWeek,
@@ -97,7 +104,7 @@ namespace ThreeChartsAPI.Services
                 })
                 .Select(task => task.Result);
 
-            var artistEntries = artistChart.Entries
+            var artistEntries = artistChartResult.Value.Entries
                 .Select(async lastFmEntry => new ChartEntry()
                 {
                     Week = chartWeek,
@@ -107,7 +114,7 @@ namespace ThreeChartsAPI.Services
                 })
                 .Select(task => task.Result);
 
-            return trackEntries.Concat(albumEntries).Concat(artistEntries).ToList();
+            return Results.Ok(trackEntries.Concat(albumEntries).Concat(artistEntries).ToList());
         }
 
         public (ChartEntryStat stat, string? statText) GetStatsForChartEntry(ChartEntry entry, List<ChartWeek> weeks)

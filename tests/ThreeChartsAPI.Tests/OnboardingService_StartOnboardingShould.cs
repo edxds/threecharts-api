@@ -11,6 +11,7 @@ using ThreeChartsAPI.Services;
 using ThreeChartsAPI.Services.Onboarding;
 using ThreeChartsAPI.Services.LastFm;
 using Xunit;
+using FluentResults;
 
 namespace ThreeChartsAPI.Tests
 {
@@ -29,30 +30,36 @@ namespace ThreeChartsAPI.Tests
             var lastFmMock = new Mock<ILastFmService>();
             lastFmMock
                 .Setup(s => s.GetWeeklyTrackChart(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>()))
-                .ReturnsAsync(new LastFmChart<LastFmChartTrack>()
-                {
-                    Entries = new List<LastFmChartTrack>()
+                .ReturnsAsync(Results.Ok(
+                    new LastFmChart<LastFmChartTrack>()
                     {
-                        new LastFmChartTrack() { Title = "Cool", Artist = "Dua Lipa", Rank = 1 },
-                        new LastFmChartTrack() { Title = "Pretty Please", Artist = "Dua Lipa", Rank = 2 },
-                        new LastFmChartTrack() { Title = "Hallucinate", Artist = "Dua Lipa", Rank = 3 },
-                        new LastFmChartTrack() { Title = "WANNABE", Artist = "ITZY", Rank = 4 },
-                    }
-                });
+                        Entries = new List<LastFmChartTrack>()
+                        {
+                            new LastFmChartTrack() { Title = "Cool", Artist = "Dua Lipa", Rank = 1 },
+                            new LastFmChartTrack() { Title = "Pretty Please", Artist = "Dua Lipa", Rank = 2 },
+                            new LastFmChartTrack() { Title = "Hallucinate", Artist = "Dua Lipa", Rank = 3 },
+                            new LastFmChartTrack() { Title = "WANNABE", Artist = "ITZY", Rank = 4 },
+                        }
+                    })
+                );
 
             lastFmMock
                 .Setup(s => s.GetWeeklyAlbumChart(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>()))
-                .ReturnsAsync(new LastFmChart<LastFmChartAlbum>()
-                {
-                    Entries = new List<LastFmChartAlbum>()
-                });
+                .ReturnsAsync(Results.Ok(
+                    new LastFmChart<LastFmChartAlbum>()
+                    {
+                        Entries = new List<LastFmChartAlbum>()
+                    })
+                );
 
             lastFmMock
                 .Setup(s => s.GetWeeklyArtistChart(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>()))
-                .ReturnsAsync(new LastFmChart<LastFmChartArtist>()
-                {
-                    Entries = new List<LastFmChartArtist>()
-                });
+                .ReturnsAsync(Results.Ok(
+                    new LastFmChart<LastFmChartArtist>()
+                    {
+                        Entries = new List<LastFmChartArtist>()
+                    })
+                );
 
             _chartWeekService = new ChartWeekService(context, lastFmMock.Object);
             _onboardingService = new OnboardingService(context, _chartWeekService);

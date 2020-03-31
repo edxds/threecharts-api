@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using ThreeChartsAPI.Models;
@@ -21,21 +22,27 @@ namespace ThreeChartsAPI.Tests
             var lastFm = new Mock<ILastFmService>();
             lastFm
                 .Setup(s => s.GetWeeklyTrackChart(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>()))
-                .ReturnsAsync(new LastFmChart<LastFmChartTrack>()
-                {
-                    Entries = new List<LastFmChartTrack>()
+                .ReturnsAsync(Results.Ok(
+                    new LastFmChart<LastFmChartTrack>()
                     {
-                        new LastFmChartTrack() { Title = "Love Again", Artist = "Dua Lipa" }
+                        Entries = new List<LastFmChartTrack>()
+                        {
+                            new LastFmChartTrack() { Title = "Love Again", Artist = "Dua Lipa" }
+                        }
                     }
-                });
+                ));
 
             lastFm
                 .Setup(s => s.GetWeeklyAlbumChart(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>()))
-                .ReturnsAsync(new LastFmChart<LastFmChartAlbum>() { Entries = new List<LastFmChartAlbum>() });
+                .ReturnsAsync(Results.Ok(
+                    new LastFmChart<LastFmChartAlbum>() { Entries = new List<LastFmChartAlbum>() })
+                );
 
             lastFm
                 .Setup(s => s.GetWeeklyArtistChart(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>()))
-                .ReturnsAsync(new LastFmChart<LastFmChartArtist>() { Entries = new List<LastFmChartArtist>() });
+                .ReturnsAsync(Results.Ok(
+                    new LastFmChart<LastFmChartArtist>() { Entries = new List<LastFmChartArtist>() })
+                );
 
             var context = ThreeChartsTestContext.BuildInMemoryContext();
             var chartWeekService = new ChartWeekService(context, lastFm.Object);

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using FluentResults;
 using ThreeChartsAPI.Models;
 
 namespace ThreeChartsAPI.Services.Onboarding
@@ -17,19 +18,39 @@ namespace ThreeChartsAPI.Services.Onboarding
             _chartWeekService = chartWeekService;
         }
 
-        public async Task OnboardUser(User user, DateTime? endDate)
+        public async Task<Result> OnboardUser(User user, DateTime? endDate)
         {
             var weeks = _chartWeekService.GetChartWeeksInDateRange(
                 user.RegisteredAt,
                 endDate ?? DateTime.Now
             );
 
+            Result? failedResult = null;
+
             var populatedWeeks = await Task.WhenAll(weeks.Select(async week =>
             {
+                if (failedResult != null)
+                {
+                    // Abort
+                    return new ChartWeek();
+                }
+
                 week.Owner = user;
-                week.ChartEntries = await _chartWeekService.CreateEntriesForChartWeek(week);
+
+                var entriesResult = await _chartWeekService.CreateEntriesForChartWeek(week);
+                if (entriesResult.IsFailed)
+                {
+                    failedResult = entriesResult;
+                }
+
+                week.ChartEntries = entriesResult.ValueOrDefault;
                 return week;
             }));
+
+            if (failedResult != null)
+            {
+                return failedResult;
+            }
 
             var entries = populatedWeeks.SelectMany(week => week.ChartEntries).ToList();
             entries.ForEach(entry =>
@@ -41,6 +62,8 @@ namespace ThreeChartsAPI.Services.Onboarding
 
             await _context.ChartWeeks.AddRangeAsync(populatedWeeks);
             await _context.SaveChangesAsync();
+
+            return Results.Ok();
         }
     }
 }
