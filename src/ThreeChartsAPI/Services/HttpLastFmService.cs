@@ -128,18 +128,15 @@ namespace ThreeChartsAPI.Services.LastFm
                 );
 
                 return Results.Fail(
-                    new Error(error.Message)
-                        .WithMetadata("LastFmErrorCode", error.ErrorCode)
-                        .WithMetadata("HttpStatusCode", response.StatusCode)
+                    new LastFmResultError((int)response.StatusCode, error)
                 );
             }
             catch (Exception exception)
             {
                 // Invalid response with non 2xx response code
                 return Results.Fail(
-                    new Error("Last.fm service unavailable.")
+                    new LastFmResultError((int)HttpStatusCode.ServiceUnavailable, null)
                         .CausedBy(exception)
-                        .WithMetadata("HttpStatusCode", HttpStatusCode.ServiceUnavailable)
                 );
             }
         }

@@ -97,9 +97,10 @@ namespace ThreeChartsAPI.Tests
 
             result.IsFailed.Should().BeTrue();
             result.Errors.Should().ContainEquivalentOf(
-                new Error("Message")
-                    .WithMetadata("HttpStatusCode", HttpStatusCode.Forbidden)
-                    .WithMetadata("LastFmErrorCode", 1)
+                new LastFmResultError(
+                    (int)HttpStatusCode.Forbidden,
+                    new LastFmError() { ErrorCode = 1, Message = "Message" }
+                )
             );
         }
 
@@ -135,9 +136,8 @@ namespace ThreeChartsAPI.Tests
 
             result.IsFailed.Should().BeTrue();
             result.Errors.Should().ContainEquivalentOf(
-                new Error("Last.fm service unavailable.")
+                new LastFmResultError((int)HttpStatusCode.ServiceUnavailable, null)
                     .CausedBy(exception)
-                    .WithMetadata("HttpStatusCode", HttpStatusCode.ServiceUnavailable)
             );
         }
     }
