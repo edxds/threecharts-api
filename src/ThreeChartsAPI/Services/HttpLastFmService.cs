@@ -18,12 +18,12 @@ namespace ThreeChartsAPI.Services.LastFm
         private readonly string _apiKey;
         private readonly string _apiSecret;
 
-        public HttpLastFmService(IHttpClientFactory factory, ILastFmDeserializer deserializer, string apiKey, string apiSecret)
+        public HttpLastFmService(IHttpClientFactory factory, ILastFmDeserializer deserializer, Settings settings)
         {
             _httpClient = factory.CreateClient("lastFm");
             _deserializer = deserializer;
-            _apiKey = apiKey;
-            _apiSecret = apiSecret;
+            _apiKey = settings.ApiKey;
+            _apiSecret = settings.ApiSecret;
         }
 
         public async Task<Result<LastFmSession>> CreateLastFmSession(string token)
@@ -117,6 +117,18 @@ namespace ThreeChartsAPI.Services.LastFm
             }
 
             return await HandleLastFmError(response);
+        }
+
+        public class Settings
+        {
+            public string ApiKey { get; }
+            public string ApiSecret { get; }
+
+            public Settings(string apiKey, string apiSecret)
+            {
+                ApiKey = apiKey;
+                ApiSecret = apiSecret;
+            }
         }
 
         private async Task<Result> HandleLastFmError(HttpResponseMessage response)

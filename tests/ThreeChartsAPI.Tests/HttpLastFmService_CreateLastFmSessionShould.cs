@@ -44,7 +44,11 @@ namespace ThreeChartsAPI.Tests
             factoryMock.Setup(f => f.CreateClient("lastFm"))
                 .Returns(new HttpClient(handlerMock.Object) { BaseAddress = new Uri(baseUri) });
 
-            var service = new HttpLastFmService(factoryMock.Object, deserializerMock.Object, "key", "secret");
+            var service = new HttpLastFmService(
+                factoryMock.Object,
+                deserializerMock.Object,
+                new HttpLastFmService.Settings("key", "secret")
+            );
 
             var expectedApiKey = "key";
             var expectedToken = "token";
@@ -91,7 +95,12 @@ namespace ThreeChartsAPI.Tests
             factoryMock.Setup(f => f.CreateClient("lastFm"))
                 .Returns(new HttpClient(handlerMock.Object) { BaseAddress = new Uri(baseUri) });
 
-            var service = new HttpLastFmService(factoryMock.Object, deserializerMock.Object, "key", "secret");
+            var service = new HttpLastFmService(
+                factoryMock.Object,
+                deserializerMock.Object,
+                new HttpLastFmService.Settings("key", "secret")
+            );
+
             var result = await service.CreateLastFmSession("token");
 
             result.IsFailed.Should().BeTrue();
@@ -130,7 +139,12 @@ namespace ThreeChartsAPI.Tests
             factoryMock.Setup(f => f.CreateClient("lastFm"))
                 .Returns(new HttpClient(handlerMock.Object) { BaseAddress = new Uri(baseUri) });
 
-            var service = new HttpLastFmService(factoryMock.Object, deserializerMock.Object, "key", "secret");
+            var service = new HttpLastFmService(
+                factoryMock.Object,
+                deserializerMock.Object,
+                new HttpLastFmService.Settings("key", "secret")
+            );
+
             var result = await service.CreateLastFmSession("token");
 
             result.IsFailed.Should().BeTrue();
