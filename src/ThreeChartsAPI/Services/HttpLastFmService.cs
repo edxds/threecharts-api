@@ -26,6 +26,16 @@ namespace ThreeChartsAPI.Services.LastFm
             _apiSecret = settings.ApiSecret;
         }
 
+        public string GetAuthorizationUrl(string? callback)
+        {
+            var url = $"https://www.last.fm/api/auth/?api_key={_apiKey}";
+
+            if (callback != null)
+                url += $"&cb={callback}";
+
+            return url;
+        }
+
         public async Task<Result<LastFmSession>> CreateLastFmSession(string token)
         {
             var method = "auth.getsession";

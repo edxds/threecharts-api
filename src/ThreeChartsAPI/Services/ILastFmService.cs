@@ -6,6 +6,7 @@ namespace ThreeChartsAPI.Services.LastFm
 {
     public interface ILastFmService
     {
+        string GetAuthorizationUrl(string? callback);
         Task<Result<LastFmSession>> CreateLastFmSession(string token);
         Task<Result<LastFmUserInfo>> GetUserInfo(string? userName, string? session);
         Task<Result<LastFmChart<LastFmChartTrack>>> GetWeeklyTrackChart(string user, long from, long to);
