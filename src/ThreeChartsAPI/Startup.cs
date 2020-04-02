@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using EFCore.NamingConventions;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -9,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ThreeChartsAPI.Models;
+using ThreeChartsAPI.Services.LastFm;
 
 namespace ThreeChartsAPI
 {
@@ -29,6 +31,22 @@ namespace ThreeChartsAPI
                 options.UseNpgsql(Configuration.GetConnectionString("ThreeChartsDB"));
                 options.UseSnakeCaseNamingConvention();
             });
+
+            services.AddHttpClient("lastFm", c =>
+            {
+                c.BaseAddress = new Uri("http://ws.audioscrobbler.com/2.0/");
+            });
+
+            services.AddSingleton<ILastFmDeserializer, LastFmJsonDeserializer>();
+
+            services.AddSingleton(
+                new HttpLastFmService.Settings(
+                    Configuration.GetValue<string>("LastFmApiKey"),
+                    Configuration.GetValue<string>("LastFmApiSecret")
+                )
+            );
+
+            services.AddSingleton<ILastFmService, HttpLastFmService>();
 
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
