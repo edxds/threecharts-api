@@ -45,7 +45,7 @@ namespace ThreeChartsAPI.Tests
                 );
 
             var context = ThreeChartsTestContext.BuildInMemoryContext();
-            var chartWeekService = new ChartWeekService(context, lastFm.Object);
+            var chartWeekService = new ChartWeekService(context);
 
             var user = new User() { UserName = "edxds" };
             var defaultWeek = new ChartWeek()
@@ -58,7 +58,16 @@ namespace ThreeChartsAPI.Tests
             /* Save two chart entries with the same track */
             for (int i = 0; i < 2; i++)
             {
-                await chartWeekService.CreateEntriesForChartWeek(defaultWeek);
+                var trackChart = await lastFm.Object.GetWeeklyTrackChart("", 0, 0);
+                var albumChart = await lastFm.Object.GetWeeklyAlbumChart("", 0, 0);
+                var artistChart = await lastFm.Object.GetWeeklyArtistChart("", 0, 0);
+
+                await chartWeekService.CreateEntriesForLastFmCharts(
+                    trackChart.Value,
+                    albumChart.Value,
+                    artistChart.Value,
+                    defaultWeek
+                );
             }
 
             var savedTracks = await context.Tracks.ToListAsync();

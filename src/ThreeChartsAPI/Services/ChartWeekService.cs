@@ -2,22 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using ThreeChartsAPI.Models;
-using ThreeChartsAPI.Services.LastFm;
+using ThreeChartsAPI.Models.LastFm;
 
 namespace ThreeChartsAPI.Services
 {
     public class ChartWeekService : IChartWeekService
     {
         private readonly ThreeChartsContext _context;
-        private readonly ILastFmService _lastFm;
 
-        public ChartWeekService(ThreeChartsContext context, ILastFmService lastFmService)
+        public ChartWeekService(ThreeChartsContext context)
         {
             _context = context;
-            _lastFm = lastFmService;
         }
 
         public List<ChartWeek> GetChartWeeksInDateRange(DateTime startDate, DateTime endDate)
@@ -62,59 +59,51 @@ namespace ThreeChartsAPI.Services
             return chartWeekList;
         }
 
-        public async Task<Result<List<ChartEntry>>> CreateEntriesForChartWeek(ChartWeek chartWeek)
+        public async Task<List<ChartEntry>> CreateEntriesForLastFmCharts(
+            LastFmChart<LastFmChartTrack> trackChart,
+            LastFmChart<LastFmChartAlbum> albumChart,
+            LastFmChart<LastFmChartArtist> artistChart,
+            ChartWeek targetWeek)
         {
-            var user = chartWeek.Owner.UserName;
-            var from = ((DateTimeOffset)chartWeek.From).ToUnixTimeSeconds();
-            var to = ((DateTimeOffset)chartWeek.To).ToUnixTimeSeconds();
+            var entries = new List<ChartEntry>();
 
-            var trackChartTask = _lastFm.GetWeeklyTrackChart(user, from, to);
-            var albumChartTask = _lastFm.GetWeeklyAlbumChart(user, from, to);
-            var artistChartTask = _lastFm.GetWeeklyArtistChart(user, from, to);
-
-            await Task.WhenAll(trackChartTask, albumChartTask, artistChartTask);
-
-            var trackChartResult = trackChartTask.Result;
-            var albumChartResult = albumChartTask.Result;
-            var artistChartResult = artistChartTask.Result;
-
-            var mergedResults = Results.Merge(trackChartResult, albumChartResult, artistChartResult);
-            if (mergedResults.IsFailed)
+            foreach (var entry in trackChart.Entries)
             {
-                return mergedResults.ToResult<List<ChartEntry>>();
+                var track = await GetTrackOrCreate(entry.Artist, entry.Title);
+                entries.Add(new ChartEntry()
+                {
+                    Week = targetWeek,
+                    Type = ChartEntryType.Track,
+                    Rank = entry.Rank,
+                    Track = track,
+                });
             }
 
-            var trackEntries = trackChartResult.Value.Entries
-                .Select(async lastFmEntry => new ChartEntry()
+            foreach (var entry in albumChart.Entries)
+            {
+                var album = await GetAlbumOrCreate(entry.Artist, entry.Title);
+                entries.Add(new ChartEntry()
                 {
-                    Week = chartWeek,
-                    Type = ChartEntryType.Track,
-                    Rank = lastFmEntry.Rank,
-                    Track = await GetTrackOrCreate(lastFmEntry.Artist, lastFmEntry.Title),
-                })
-                .Select(task => task.Result);
-
-            var albumEntries = albumChartResult.Value.Entries
-                .Select(async lastFmEntry => new ChartEntry()
-                {
-                    Week = chartWeek,
+                    Week = targetWeek,
                     Type = ChartEntryType.Album,
-                    Rank = lastFmEntry.Rank,
-                    Album = await GetAlbumOrCreate(lastFmEntry.Artist, lastFmEntry.Title)
-                })
-                .Select(task => task.Result);
+                    Rank = entry.Rank,
+                    Album = album,
+                });
+            }
 
-            var artistEntries = artistChartResult.Value.Entries
-                .Select(async lastFmEntry => new ChartEntry()
+            foreach (var entry in artistChart.Entries)
+            {
+                var artist = await GetArtistOrCreate(entry.Name);
+                entries.Add(new ChartEntry()
                 {
-                    Week = chartWeek,
+                    Week = targetWeek,
                     Type = ChartEntryType.Artist,
-                    Rank = lastFmEntry.Rank,
-                    Artist = await GetArtistOrCreate(lastFmEntry.Name)
-                })
-                .Select(task => task.Result);
+                    Rank = entry.Rank,
+                    Artist = artist,
+                });
+            }
 
-            return Results.Ok(trackEntries.Concat(albumEntries).Concat(artistEntries).ToList());
+            return entries;
         }
 
         public (ChartEntryStat stat, string? statText) GetStatsForChartEntry(ChartEntry entry, List<ChartWeek> weeks)

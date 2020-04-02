@@ -4,7 +4,6 @@ using FluentAssertions;
 using Moq;
 using ThreeChartsAPI.Models;
 using ThreeChartsAPI.Services;
-using ThreeChartsAPI.Services.LastFm;
 using Xunit;
 
 namespace ThreeChartsAPI.Tests
@@ -16,9 +15,7 @@ namespace ThreeChartsAPI.Tests
         public ChartWeekService_GetChartWeeksInDateRangeShould()
         {
             var context = ThreeChartsTestContext.BuildInMemoryContext();
-            var lastFmMock = new Mock<ILastFmService>();
-
-            _service = new ChartWeekService(context, lastFmMock.Object);
+            _service = new ChartWeekService(context);
         }
 
         [Fact]

@@ -61,8 +61,8 @@ namespace ThreeChartsAPI.Tests
                     })
                 );
 
-            _chartWeekService = new ChartWeekService(context, lastFmMock.Object);
-            _onboardingService = new OnboardingService(context, _chartWeekService);
+            _chartWeekService = new ChartWeekService(context);
+            _onboardingService = new OnboardingService(context, _chartWeekService, lastFmMock.Object);
         }
 
         [Fact]

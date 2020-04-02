@@ -14,9 +14,8 @@ namespace ThreeChartsAPI.Tests
 {
     public class ChartWeekService_GetStatsForChartEntryShould
     {
-        private readonly ChartWeekService _service;
-
-        public ChartWeekService_GetStatsForChartEntryShould()
+        [Fact]
+        public async Task GetStatsForChart_ReturnsCorrectStats()
         {
             var lastFmMock = new Mock<ILastFmService>();
             lastFmMock
@@ -76,12 +75,8 @@ namespace ThreeChartsAPI.Tests
                 );
 
             var context = ThreeChartsTestContext.BuildInMemoryContext();
-            _service = new ChartWeekService(context, lastFmMock.Object);
-        }
+            var service = new ChartWeekService(context);
 
-        [Fact]
-        public async Task GetStatsForChart_ReturnsCorrectStats()
-        {
             var weeks = new List<ChartWeek>();
             for (int i = 0; i < 3; i++)
             {
@@ -89,20 +84,28 @@ namespace ThreeChartsAPI.Tests
                 week.Owner = new User() { UserName = "edxds" };
                 week.WeekNumber = i + 1;
 
-                var entries = await _service.CreateEntriesForChartWeek(week);
-                week.ChartEntries = entries.ValueOrDefault;
+                var trackChart = await lastFmMock.Object.GetWeeklyTrackChart("", 0, 0);
+                var albumChart = await lastFmMock.Object.GetWeeklyAlbumChart("", 0, 0);
+                var artistChart = await lastFmMock.Object.GetWeeklyArtistChart("", 0, 0);
+
+                week.ChartEntries = await service.CreateEntriesForLastFmCharts(
+                    trackChart.Value,
+                    albumChart.Value,
+                    artistChart.Value,
+                    week
+                );
 
                 weeks.Add(week);
             }
 
             var firstWeekResults = weeks[0].ChartEntries.Select(entry
-                => _service.GetStatsForChartEntry(entry, weeks)).ToList();
+                => service.GetStatsForChartEntry(entry, weeks)).ToList();
 
             var secondWeekResults = weeks[1].ChartEntries.Select(entry
-                => _service.GetStatsForChartEntry(entry, weeks)).ToList();
+                => service.GetStatsForChartEntry(entry, weeks)).ToList();
 
             var thirdWeekResults = weeks[2].ChartEntries.Select(entry
-                => _service.GetStatsForChartEntry(entry, weeks)).ToList();
+                => service.GetStatsForChartEntry(entry, weeks)).ToList();
 
             // All stats on the first week should be .New
             firstWeekResults.ForEach(r => r.stat.Should().Be(ChartEntryStat.New));
