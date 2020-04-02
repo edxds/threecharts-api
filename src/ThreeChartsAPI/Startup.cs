@@ -12,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using ThreeChartsAPI.Models;
 using ThreeChartsAPI.Services;
 using ThreeChartsAPI.Services.LastFm;
+using ThreeChartsAPI.Services.Onboarding;
 
 namespace ThreeChartsAPI
 {
@@ -51,6 +52,8 @@ namespace ThreeChartsAPI
 
             // Services that use DbContext should be scoped
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IChartWeekService, ChartWeekService>();
+            services.AddScoped<IOnboardingService, OnboardingService>();
 
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
