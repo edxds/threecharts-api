@@ -65,8 +65,8 @@ namespace ThreeChartsAPI.Services
         public async Task<Result<List<ChartEntry>>> CreateEntriesForChartWeek(ChartWeek chartWeek)
         {
             var user = chartWeek.Owner.UserName;
-            var from = ((DateTimeOffset)chartWeek.From).ToUnixTimeMilliseconds();
-            var to = ((DateTimeOffset)chartWeek.To).ToUnixTimeMilliseconds();
+            var from = ((DateTimeOffset)chartWeek.From).ToUnixTimeSeconds();
+            var to = ((DateTimeOffset)chartWeek.To).ToUnixTimeSeconds();
 
             var trackChartTask = _lastFm.GetWeeklyTrackChart(user, from, to);
             var albumChartTask = _lastFm.GetWeeklyAlbumChart(user, from, to);
