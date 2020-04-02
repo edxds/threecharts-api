@@ -153,6 +153,7 @@ namespace ThreeChartsAPI.Services
             }
 
             var previousEntry = weeks
+                .Where(week => week.WeekNumber < entry.Week.WeekNumber)
                 .SelectMany(week => week.ChartEntries)
                 .ToList()
                 .Find(prevEntry =>
