@@ -46,5 +46,10 @@ namespace ThreeChartsAPI.Services
 
             return newUser;
         }
+
+        public Task<User> FindUserFromUserName(string userName)
+        {
+            return _context.Users.FirstOrDefaultAsync(user => user.UserName == userName);
+        }
     }
 }

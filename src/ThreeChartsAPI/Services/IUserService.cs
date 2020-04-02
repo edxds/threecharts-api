@@ -7,5 +7,6 @@ namespace ThreeChartsAPI.Services
     public interface IUserService
     {
         Task<User> GetOrCreateUserFromInfo(LastFmUserInfo userInfo);
+        Task<User> FindUserFromUserName(string userName);
     }
 }
