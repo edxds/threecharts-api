@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ThreeChartsAPI.Models;
+using ThreeChartsAPI.Services;
 using ThreeChartsAPI.Services.LastFm;
 
 namespace ThreeChartsAPI
@@ -47,6 +48,9 @@ namespace ThreeChartsAPI
             );
 
             services.AddSingleton<ILastFmService, HttpLastFmService>();
+
+            // Services that use DbContext should be scoped
+            services.AddScoped<IUserService, UserService>();
 
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
