@@ -17,9 +17,6 @@ namespace ThreeChartsAPI.Tests
         {
             var service = new UserService(_context);
 
-            var unixTime = new DateTimeOffset(new DateTime(2020, 3, 3, 0, 0, 0)).ToUnixTimeMilliseconds();
-            Console.WriteLine(DateTimeOffset.FromUnixTimeMilliseconds(unixTime).DateTime.ToLocalTime());
-
             var expectedUser = new User()
             {
                 Id = 1,
@@ -30,7 +27,7 @@ namespace ThreeChartsAPI.Tests
             var actualUser = await service.GetOrCreateUserFromInfo(new LastFmUserInfo()
             {
                 Name = "edxds",
-                RegisterDate = new DateTimeOffset(new DateTime(2020, 3, 3)).ToUnixTimeMilliseconds(),
+                RegisterDate = new DateTimeOffset(new DateTime(2020, 3, 3)).ToUnixTimeSeconds(),
             });
 
             actualUser.Should().BeEquivalentTo(expectedUser);
