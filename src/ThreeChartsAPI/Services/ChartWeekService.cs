@@ -129,8 +129,11 @@ namespace ThreeChartsAPI.Services
 
             var entryOnPreviousWeek = previousWeek.ChartEntries
                 .Find(prevEntry =>
-                    prevEntry.Track?.Title == entry.Track?.Title
-                    && prevEntry.Track?.ArtistName == entry.Track?.ArtistName);
+                    (prevEntry.Track?.Title == entry.Track?.Title &&
+                        prevEntry.Track?.ArtistName == entry.Track?.ArtistName) ||
+                    (prevEntry.Album?.Title == entry.Album?.Title &&
+                        prevEntry.Album?.ArtistName == entry.Album?.ArtistName) ||
+                    (prevEntry.Artist?.Name == entry.Artist?.Name));
 
             if (entryOnPreviousWeek != null)
             {
@@ -157,8 +160,11 @@ namespace ThreeChartsAPI.Services
                 .SelectMany(week => week.ChartEntries)
                 .ToList()
                 .Find(prevEntry =>
-                    prevEntry.Track?.Title == entry.Track?.Title
-                    && prevEntry.Track?.ArtistName == entry.Track?.ArtistName);
+                    (prevEntry.Track?.Title == entry.Track?.Title &&
+                        prevEntry.Track?.ArtistName == entry.Track?.ArtistName) ||
+                    (prevEntry.Album?.Title == entry.Album?.Title &&
+                        prevEntry.Album?.ArtistName == entry.Album?.ArtistName) ||
+                    (prevEntry.Artist?.Name == entry.Artist?.Name));
 
             if (previousEntry != null)
             {
