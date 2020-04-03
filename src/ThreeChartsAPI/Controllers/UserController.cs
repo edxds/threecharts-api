@@ -35,26 +35,32 @@ namespace ThreeChartsAPI.Controllers
         public async Task<ActionResult<UserDto>> GetDetails()
         {
             var sessionKey = User.FindFirst("SessionKey").Value;
-            if (sessionKey == null)
+            var userName = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            if (sessionKey == null || userName == null)
             {
                 return Unauthorized();
             }
 
-            var userInfo = await _lastFm.GetUserInfo(null, sessionKey);
-            if (userInfo.IsFailed)
+            var user = await _userService.FindUserFromUserName(userName);
+            if (user == null)
             {
-                var lastFmError = userInfo.Errors.Find(error =>
-                    error is LastFmResultError
-                ) as LastFmResultError;
-
-                return StatusCode(lastFmError!.StatusCode, new LastFmErrorDto()
+                var userInfo = await _lastFm.GetUserInfo(null, sessionKey);
+                if (userInfo.IsFailed)
                 {
-                    ErrorCode = lastFmError!.LastFmErrorCode ?? -1,
-                    Message = lastFmError!.LastFmErrorMessage ?? "Last.fm service unavailable."
-                });
+                    var lastFmError = userInfo.Errors.Find(error =>
+                        error is LastFmResultError
+                    ) as LastFmResultError;
+
+                    return StatusCode(lastFmError!.StatusCode, new LastFmErrorDto()
+                    {
+                        ErrorCode = lastFmError!.LastFmErrorCode ?? -1,
+                        Message = lastFmError!.LastFmErrorMessage ?? "Last.fm service unavailable."
+                    });
+                }
+
+                user = await _userService.GetOrCreateUserFromInfo(userInfo.Value);
             }
 
-            var user = await _userService.GetOrCreateUserFromInfo(userInfo.Value);
             return Ok(new UserDto()
             {
                 Id = user.Id,
