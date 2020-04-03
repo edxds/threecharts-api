@@ -87,38 +87,47 @@ namespace ThreeChartsAPI.Services
 
             foreach (var entry in trackChart.Entries)
             {
-                var track = await GetTrackOrCreate(entry.Artist, entry.Title);
-                entries.Add(new ChartEntry()
+                if (entry.Rank <= 100)
                 {
-                    Week = targetWeek,
-                    Type = ChartEntryType.Track,
-                    Rank = entry.Rank,
-                    Track = track,
-                });
+                    var track = await GetTrackOrCreate(entry.Artist, entry.Title);
+                    entries.Add(new ChartEntry()
+                    {
+                        Week = targetWeek,
+                        Type = ChartEntryType.Track,
+                        Rank = entry.Rank,
+                        Track = track,
+                    });
+                }
             }
 
             foreach (var entry in albumChart.Entries)
             {
-                var album = await GetAlbumOrCreate(entry.Artist, entry.Title);
-                entries.Add(new ChartEntry()
+                if (entry.Rank <= 100)
                 {
-                    Week = targetWeek,
-                    Type = ChartEntryType.Album,
-                    Rank = entry.Rank,
-                    Album = album,
-                });
+                    var album = await GetAlbumOrCreate(entry.Artist, entry.Title);
+                    entries.Add(new ChartEntry()
+                    {
+                        Week = targetWeek,
+                        Type = ChartEntryType.Album,
+                        Rank = entry.Rank,
+                        Album = album,
+                    });
+                }
             }
 
             foreach (var entry in artistChart.Entries)
             {
-                var artist = await GetArtistOrCreate(entry.Name);
-                entries.Add(new ChartEntry()
+                if (entry.Rank <= 100)
                 {
-                    Week = targetWeek,
-                    Type = ChartEntryType.Artist,
-                    Rank = entry.Rank,
-                    Artist = artist,
-                });
+                    var artist = await GetArtistOrCreate(entry.Name);
+                    entries.Add(new ChartEntry()
+                    {
+                        Week = targetWeek,
+                        Type = ChartEntryType.Artist,
+                        Rank = entry.Rank,
+                        Artist = artist,
+                    });
+                }
             }
 
             return entries;
