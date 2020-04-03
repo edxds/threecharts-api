@@ -59,6 +59,11 @@ namespace ThreeChartsAPI.Services
             return chartWeekList;
         }
 
+        public Task<List<ChartWeek>> GetUserChartWeeks(int ownerId)
+        {
+            return _context.ChartWeeks.Where(week => week.OwnerId == ownerId).ToListAsync();
+        }
+
         public async Task<List<ChartEntry>> CreateEntriesForLastFmCharts(
             LastFmChart<LastFmChartTrack> trackChart,
             LastFmChart<LastFmChartAlbum> albumChart,
