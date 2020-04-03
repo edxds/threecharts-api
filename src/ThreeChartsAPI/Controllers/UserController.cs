@@ -57,6 +57,7 @@ namespace ThreeChartsAPI.Controllers
             var user = await _userService.GetOrCreateUserFromInfo(userInfo.Value);
             return Ok(new UserDto()
             {
+                Id = user.Id,
                 UserName = user.UserName,
                 RealName = user.RealName,
                 LastFmUrl = user.LastFmUrl,
