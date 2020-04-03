@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using EFCore.NamingConventions;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -27,7 +28,12 @@ namespace ThreeChartsAPI
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                });
+
             services.AddDbContext<ThreeChartsContext>(options =>
             {
                 options.UseNpgsql(Configuration.GetConnectionString("ThreeChartsDB"));
