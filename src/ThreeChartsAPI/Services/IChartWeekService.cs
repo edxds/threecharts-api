@@ -11,6 +11,7 @@ namespace ThreeChartsAPI.Services
     {
         List<ChartWeek> GetChartWeeksInDateRange(DateTime startDate, DateTime endDate);
 
+        Task<ChartWeek> GetChartWeek(int ownerId, int weekId);
         Task<List<ChartWeek>> GetUserChartWeeks(int ownerId);
         Task<List<ChartEntry>> CreateEntriesForLastFmCharts(
             LastFmChart<LastFmChartTrack> trackChart,

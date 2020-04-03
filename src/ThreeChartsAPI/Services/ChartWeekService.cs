@@ -59,6 +59,19 @@ namespace ThreeChartsAPI.Services
             return chartWeekList;
         }
 
+        public Task<ChartWeek> GetChartWeek(int ownerId, int weekId)
+        {
+            return _context.ChartWeeks
+                .Include(week => week.ChartEntries)
+                    .ThenInclude(entry => entry.Artist)
+                .Include(week => week.ChartEntries)
+                    .ThenInclude(entry => entry.Album)
+                .Include(week => week.ChartEntries)
+                    .ThenInclude(entry => entry.Track)
+                .Where(week => week.OwnerId == ownerId && week.Id == weekId)
+                .FirstOrDefaultAsync();
+        }
+
         public Task<List<ChartWeek>> GetUserChartWeeks(int ownerId)
         {
             return _context.ChartWeeks.Where(week => week.OwnerId == ownerId).ToListAsync();
