@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using FluentResults;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using ThreeChartsAPI.Models.Dtos;
 using ThreeChartsAPI.Models.LastFm;
 using ThreeChartsAPI.Models.LastFm.Dtos;
+using ThreeChartsAPI.Services;
 using ThreeChartsAPI.Services.LastFm;
 
 namespace ThreeChartsAPI.Controllers
@@ -18,10 +20,12 @@ namespace ThreeChartsAPI.Controllers
     public class AuthorizationController : ControllerBase
     {
         private readonly ILastFmService _lastFm;
+        private readonly IUserService _userService;
 
-        public AuthorizationController(ILastFmService lastFmService)
+        public AuthorizationController(ILastFmService lastFmService, IUserService userService)
         {
             _lastFm = lastFmService;
+            _userService = userService;
         }
 
         [HttpGet]
@@ -35,23 +39,27 @@ namespace ThreeChartsAPI.Controllers
         [HttpPost]
         [AllowAnonymous]
         [Route("authorize")]
-        public async Task<ActionResult> Authorize(AuthorizeDto dto)
+        public async Task<ActionResult<UserDto>> Authorize(AuthorizeDto dto)
         {
             var sessionResult = await _lastFm.CreateLastFmSession(dto.Token);
             if (sessionResult.IsFailed)
             {
-                var lastFmError = sessionResult.Errors.Find(error =>
-                    error is LastFmResultError
-                ) as LastFmResultError;
-
-                return StatusCode(lastFmError!.StatusCode, new LastFmErrorDto()
-                {
-                    ErrorCode = lastFmError!.LastFmErrorCode ?? -1,
-                    Message = lastFmError!.LastFmErrorMessage ?? "Last.fm service unavailable."
-                });
+                return HandleLastFmError(sessionResult);
             }
 
+
             var session = sessionResult.Value;
+            var user = await _userService.FindUserFromUserName(session.LastFmUser);
+            if (user == null)
+            {
+                var userInfo = await _lastFm.GetUserInfo(null, session.Key);
+                if (userInfo.IsFailed)
+                {
+                    return HandleLastFmError(sessionResult);
+                }
+
+                user = await _userService.GetOrCreateUserFromInfo(userInfo.Value);
+            }
 
             var claims = new List<Claim>()
             {
@@ -74,7 +82,15 @@ namespace ThreeChartsAPI.Controllers
                 authProperties
             );
 
-            return NoContent();
+            return Ok(new UserDto()
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                RealName = user.RealName,
+                LastFmUrl = user.LastFmUrl,
+                ProfilePicture = user.ProfilePicture,
+                RegisteredAt = user.RegisteredAt,
+            });
         }
 
         [HttpPost]
@@ -83,6 +99,19 @@ namespace ThreeChartsAPI.Controllers
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return NoContent();
+        }
+
+        private ActionResult HandleLastFmError(Result failedResult)
+        {
+            var lastFmError = failedResult.Errors.Find(error =>
+                    error is LastFmResultError
+                ) as LastFmResultError;
+
+            return StatusCode(lastFmError!.StatusCode, new LastFmErrorDto()
+            {
+                ErrorCode = lastFmError!.LastFmErrorCode ?? -1,
+                Message = lastFmError!.LastFmErrorMessage ?? "Last.fm service unavailable."
+            });
         }
     }
 }
