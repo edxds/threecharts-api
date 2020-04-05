@@ -88,7 +88,7 @@ namespace ThreeChartsAPI.Controllers
                 return NotFound();
             }
 
-            var onboardingResult = await _onboardingService.OnboardUser(user, null);
+            var onboardingResult = await _onboardingService.SyncWeeks(user, user.RegisteredAt, null);
             if (onboardingResult.IsFailed)
             {
                 var lastFmError = onboardingResult.Errors.Find(error =>

@@ -15,7 +15,7 @@ using FluentResults;
 
 namespace ThreeChartsAPI.Tests
 {
-    public class OnboardingService_StartOnboardingShould
+    public class OnboardingService_SyncWeeksShould
     {
         private readonly ThreeChartsContext context = ThreeChartsTestContext.BuildInMemoryContext();
 
@@ -25,7 +25,7 @@ namespace ThreeChartsAPI.Tests
         private readonly DateTime userRegisterDate = new DateTime(2020, 3, 6);
         private readonly DateTime nowDate = new DateTime(2020, 3, 13);
 
-        public OnboardingService_StartOnboardingShould()
+        public OnboardingService_SyncWeeksShould()
         {
             var lastFmMock = new Mock<ILastFmService>();
             lastFmMock
@@ -66,13 +66,13 @@ namespace ThreeChartsAPI.Tests
         }
 
         [Fact]
-        public async Task OnboardUser_WithGenericUser_SavesWeeksCorrectly()
+        public async Task SyncWeeks_WithGenericUser_SavesWeeksCorrectly()
         {
             var user = new User() { UserName = "edxds", RegisteredAt = userRegisterDate };
             await context.Users.AddAsync(user);
             await context.SaveChangesAsync();
 
-            await _onboardingService.OnboardUser(user, nowDate);
+            await _onboardingService.SyncWeeks(user, user.RegisteredAt, nowDate);
 
             var actualWeeks = await context.ChartWeeks
                 .Where(week => week.OwnerId == user.Id)
