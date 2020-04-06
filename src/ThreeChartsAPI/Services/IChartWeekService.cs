@@ -13,6 +13,7 @@ namespace ThreeChartsAPI.Services
 
         Task<ChartWeek> GetChartWeek(int ownerId, int weekId);
         Task<List<ChartWeek>> GetUserChartWeeks(int ownerId);
+        Task<List<ChartWeek>> GetOutdatedWeeks(int ownerId, DateTime defaultStartDate, DateTime endDate);
         Task<List<ChartEntry>> CreateEntriesForLastFmCharts(
             LastFmChart<LastFmChartTrack> trackChart,
             LastFmChart<LastFmChartAlbum> albumChart,

@@ -77,6 +77,21 @@ namespace ThreeChartsAPI.Services
             return _context.ChartWeeks.Where(week => week.OwnerId == ownerId).ToListAsync();
         }
 
+        public async Task<List<ChartWeek>> GetOutdatedWeeks(
+            int ownerId,
+            DateTime defaultStartDate,
+            DateTime endDate)
+        {
+            var lastWeek = await _context.ChartWeeks.Where(week => week.OwnerId == ownerId)
+                .OrderByDescending(week => week.WeekNumber)
+                .FirstAsync();
+
+            return GetChartWeeksInDateRange(
+                lastWeek?.WeekNumber + 1 ?? 1,
+                lastWeek?.To.AddSeconds(1) ?? defaultStartDate,
+                endDate);
+        }
+
         public async Task<List<ChartEntry>> CreateEntriesForLastFmCharts(
             LastFmChart<LastFmChartTrack> trackChart,
             LastFmChart<LastFmChartAlbum> albumChart,
