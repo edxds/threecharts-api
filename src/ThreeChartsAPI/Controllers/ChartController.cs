@@ -43,6 +43,11 @@ namespace ThreeChartsAPI.Controllers
         public async Task<ActionResult<ChartsDto>> GetUserCharts(int ownerId, int weekId)
         {
             var week = await _weekService.GetChartWeek(ownerId, weekId);
+            if (week == null)
+            {
+                return NotFound();
+            }
+
             var chartsDto = new ChartsDto()
             {
                 OwnerId = week.OwnerId,
