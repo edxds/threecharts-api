@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using FluentResults;
+using Microsoft.EntityFrameworkCore;
 using ThreeChartsAPI.Models;
 using ThreeChartsAPI.Services.LastFm;
 
@@ -93,9 +94,20 @@ namespace ThreeChartsAPI.Services.Onboarding
             }
 
             var entries = weeks.SelectMany(week => week.ChartEntries).ToList();
+            var previousWeeks = await _context.ChartWeeks
+                .Where(week => week.OwnerId == user.Id)
+                .OrderByDescending(week => week.WeekNumber)
+                .Include(week => week.ChartEntries)
+                    .ThenInclude(entry => entry.Track)
+                .Include(week => week.ChartEntries)
+                    .ThenInclude(entry => entry.Album)
+                .Include(week => week.ChartEntries)
+                    .ThenInclude(entry => entry.Artist)
+                .ToListAsync();
+
             entries.ForEach(entry =>
             {
-                var (stat, statText) = _chartWeekService.GetStatsForChartEntry(entry, weeks);
+                var (stat, statText) = _chartWeekService.GetStatsForChartEntry(entry, previousWeeks);
                 entry.Stat = stat;
                 entry.StatText = statText;
             });
