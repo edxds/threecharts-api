@@ -28,27 +28,27 @@ namespace ThreeChartsAPI.Services.Onboarding
 
         public async Task<Result> SyncWeeks(User user, int startWeekNumber, DateTime startDate, DateTime? endDate)
         {
-            var weeks = _chartWeekService.GetChartWeeksInDateRange(
+            var newWeeks = _chartWeekService.GetChartWeeksInDateRange(
                 startWeekNumber,
                 startDate,
                 endDate ?? DateTime.Now
             );
 
-            var trackChartTasks = weeks
+            var trackChartTasks = newWeeks
                 .Select(week => _lastFm.GetWeeklyTrackChart(
                     user.UserName,
                     new DateTimeOffset(week.From).ToUnixTimeSeconds(),
                     new DateTimeOffset(week.To).ToUnixTimeSeconds()))
                 .ToList();
 
-            var albumChartTasks = weeks
+            var albumChartTasks = newWeeks
                 .Select(week => _lastFm.GetWeeklyAlbumChart(
                     user.UserName,
                     new DateTimeOffset(week.From).ToUnixTimeSeconds(),
                     new DateTimeOffset(week.To).ToUnixTimeSeconds()))
                 .ToList();
 
-            var artistChartTasks = weeks
+            var artistChartTasks = newWeeks
                 .Select(week => _lastFm.GetWeeklyArtistChart(
                     user.UserName,
                     new DateTimeOffset(week.From).ToUnixTimeSeconds(),
@@ -59,7 +59,7 @@ namespace ThreeChartsAPI.Services.Onboarding
             await Task.WhenAll(albumChartTasks);
             await Task.WhenAll(artistChartTasks);
 
-            if (weeks.Count != trackChartTasks.Count() ||
+            if (newWeeks.Count != trackChartTasks.Count() ||
                 trackChartTasks.Count() != albumChartTasks.Count() ||
                 trackChartTasks.Count() != artistChartTasks.Count() ||
                 artistChartTasks.Count() != albumChartTasks.Count())
@@ -67,9 +67,9 @@ namespace ThreeChartsAPI.Services.Onboarding
                 throw new InvalidOperationException("Chart counts don't match!");
             }
 
-            for (int i = 0; i < weeks.Count(); i++)
+            for (int i = 0; i < newWeeks.Count(); i++)
             {
-                var week = weeks[i];
+                var week = newWeeks[i];
                 var trackChart = trackChartTasks[i].Result;
                 var albumChart = albumChartTasks[i].Result;
                 var artistChart = artistChartTasks[i].Result;
@@ -89,8 +89,9 @@ namespace ThreeChartsAPI.Services.Onboarding
                 );
             }
 
-            var entries = weeks.SelectMany(week => week.ChartEntries).ToList();
-            var previousWeeks = await _context.ChartWeeks
+            var entries = newWeeks.SelectMany(week => week.ChartEntries).ToList();
+
+            var savedWeeks = await _context.ChartWeeks
                 .Where(week => week.OwnerId == user.Id)
                 .OrderByDescending(week => week.WeekNumber)
                 .Include(week => week.ChartEntries)
@@ -101,6 +102,8 @@ namespace ThreeChartsAPI.Services.Onboarding
                     .ThenInclude(entry => entry.Artist)
                 .ToListAsync();
 
+            var previousWeeks = savedWeeks.Concat(newWeeks).ToList();
+
             entries.ForEach(entry =>
             {
                 var (stat, statText) = _chartWeekService.GetStatsForChartEntry(entry, previousWeeks);
@@ -108,7 +111,7 @@ namespace ThreeChartsAPI.Services.Onboarding
                 entry.StatText = statText;
             });
 
-            await _context.ChartWeeks.AddRangeAsync(weeks);
+            await _context.ChartWeeks.AddRangeAsync(newWeeks);
             await _context.SaveChangesAsync();
 
             return Results.Ok();
