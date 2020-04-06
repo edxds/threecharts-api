@@ -214,9 +214,6 @@ namespace ThreeChartsAPI.Services
                     ArtistName = artist,
                     Title = title
                 };
-
-                await _context.Tracks.AddAsync(track);
-                await _context.SaveChangesAsync();
             }
 
             return track;
@@ -234,9 +231,6 @@ namespace ThreeChartsAPI.Services
                     ArtistName = artist,
                     Title = title
                 };
-
-                await _context.Albums.AddAsync(album);
-                await _context.SaveChangesAsync();
             }
 
             return album;
@@ -252,9 +246,6 @@ namespace ThreeChartsAPI.Services
                 {
                     Name = name,
                 };
-
-                await _context.Artists.AddAsync(artist);
-                await _context.SaveChangesAsync();
             }
 
             return artist;
