@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -33,35 +34,30 @@ namespace ThreeChartsAPI.Services.Onboarding
                 endDate ?? DateTime.Now
             );
 
-            var trackChartTasks = weeks.Select(week =>
-            {
-                var from = new DateTimeOffset(week.From).ToUnixTimeSeconds();
-                var to = new DateTimeOffset(week.To).ToUnixTimeSeconds();
+            var trackChartTasks = weeks
+                .Select(week => _lastFm.GetWeeklyTrackChart(
+                    user.UserName,
+                    new DateTimeOffset(week.From).ToUnixTimeSeconds(),
+                    new DateTimeOffset(week.To).ToUnixTimeSeconds()))
+                .ToList();
 
-                return _lastFm.GetWeeklyTrackChart(user.UserName, from, to);
-            }).ToList();
+            var albumChartTasks = weeks
+                .Select(week => _lastFm.GetWeeklyAlbumChart(
+                    user.UserName,
+                    new DateTimeOffset(week.From).ToUnixTimeSeconds(),
+                    new DateTimeOffset(week.To).ToUnixTimeSeconds()))
+                .ToList();
 
-            var albumChartTasks = weeks.Select(week =>
-            {
-                var from = new DateTimeOffset(week.From).ToUnixTimeSeconds();
-                var to = new DateTimeOffset(week.To).ToUnixTimeSeconds();
+            var artistChartTasks = weeks
+                .Select(week => _lastFm.GetWeeklyArtistChart(
+                    user.UserName,
+                    new DateTimeOffset(week.From).ToUnixTimeSeconds(),
+                    new DateTimeOffset(week.To).ToUnixTimeSeconds()))
+                .ToList();
 
-                return _lastFm.GetWeeklyAlbumChart(user.UserName, from, to);
-            }).ToList();
-
-            var artistChartTasks = weeks.Select(week =>
-            {
-                var from = new DateTimeOffset(week.From).ToUnixTimeSeconds();
-                var to = new DateTimeOffset(week.To).ToUnixTimeSeconds();
-
-                return _lastFm.GetWeeklyArtistChart(user.UserName, from, to);
-            }).ToList();
-
-            await Task.WhenAll(
-                Task.WhenAll(trackChartTasks),
-                Task.WhenAll(albumChartTasks),
-                Task.WhenAll(artistChartTasks)
-            );
+            await Task.WhenAll(trackChartTasks);
+            await Task.WhenAll(albumChartTasks);
+            await Task.WhenAll(artistChartTasks);
 
             if (weeks.Count != trackChartTasks.Count() ||
                 trackChartTasks.Count() != albumChartTasks.Count() ||
