@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -18,15 +19,18 @@ namespace ThreeChartsAPI.Controllers
     {
         private readonly IUserService _userService;
         private readonly IOnboardingService _onboardingService;
+        private readonly IChartWeekService _chartWeekService;
         private readonly ILastFmService _lastFm;
 
         public UserController(
             IUserService userService,
             IOnboardingService onboardingService,
+            IChartWeekService chartWeekService,
             ILastFmService lastFmService)
         {
             _userService = userService;
             _onboardingService = onboardingService;
+            _chartWeekService = chartWeekService;
             _lastFm = lastFmService;
         }
 
@@ -73,8 +77,8 @@ namespace ThreeChartsAPI.Controllers
         }
 
         [HttpPost]
-        [Route("onboard")]
-        public async Task<ActionResult> Onboard()
+        [Route("sync")]
+        public async Task<ActionResult<UserWeeksDto>> SyncWeeks()
         {
             var userName = User.FindFirst(ClaimTypes.NameIdentifier).Value;
             if (userName == null)
@@ -88,10 +92,20 @@ namespace ThreeChartsAPI.Controllers
                 return NotFound();
             }
 
-            var onboardingResult = await _onboardingService.SyncWeeks(user, user.RegisteredAt, null);
-            if (onboardingResult.IsFailed)
+            var weeks = await _chartWeekService.GetUserChartWeeks(user.Id);
+            var syncStartDate = user.RegisteredAt;
+            var startWeekNumber = 0;
+            if (weeks.Count > 0)
             {
-                var lastFmError = onboardingResult.Errors.Find(error =>
+                var lastestWeek = weeks.OrderByDescending(week => week.WeekNumber).First();
+                syncStartDate = lastestWeek.To.AddSeconds(1);
+                startWeekNumber = lastestWeek.WeekNumber + 1;
+            }
+
+            var syncResult = await _onboardingService.SyncWeeks(user, startWeekNumber, syncStartDate, null);
+            if (syncResult.IsFailed)
+            {
+                var lastFmError = syncResult.Errors.Find(error =>
                     error is LastFmResultError
                 ) as LastFmResultError;
 
@@ -102,7 +116,20 @@ namespace ThreeChartsAPI.Controllers
                 });
             }
 
-            return NoContent();
+            var syncedWeeks = await _chartWeekService.GetUserChartWeeks(user.Id);
+            var weekDtos = syncedWeeks
+                .OrderBy(week => week.WeekNumber)
+                .Select(week => new UserWeekDto()
+                {
+                    Id = week.Id,
+                    OwnerId = week.OwnerId,
+                    WeekNumber = week.WeekNumber,
+                    From = week.From,
+                    To = week.To
+                })
+                .ToList();
+
+            return Ok(weekDtos);
         }
     }
 }
