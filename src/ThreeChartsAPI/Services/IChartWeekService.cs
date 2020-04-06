@@ -9,7 +9,7 @@ namespace ThreeChartsAPI.Services
 {
     public interface IChartWeekService
     {
-        List<ChartWeek> GetChartWeeksInDateRange(DateTime startDate, DateTime endDate);
+        List<ChartWeek> GetChartWeeksInDateRange(int startWeekNumber, DateTime startDate, DateTime endDate);
 
         Task<ChartWeek> GetChartWeek(int ownerId, int weekId);
         Task<List<ChartWeek>> GetUserChartWeeks(int ownerId);

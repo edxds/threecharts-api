@@ -7,6 +7,6 @@ namespace ThreeChartsAPI.Services.Onboarding
 {
     public interface IOnboardingService
     {
-        Task<Result> SyncWeeks(User user, DateTime startDate, DateTime? endDate);
+        Task<Result> SyncWeeks(User user, int startWeekNumber, DateTime startDate, DateTime? endDate);
     }
 }

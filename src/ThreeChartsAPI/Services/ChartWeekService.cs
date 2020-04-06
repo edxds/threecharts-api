@@ -17,7 +17,7 @@ namespace ThreeChartsAPI.Services
             _context = context;
         }
 
-        public List<ChartWeek> GetChartWeeksInDateRange(DateTime startDate, DateTime endDate)
+        public List<ChartWeek> GetChartWeeksInDateRange(int startWeekNumber, DateTime startDate, DateTime endDate)
         {
             var chartWeekList = new List<ChartWeek>();
 
@@ -40,7 +40,7 @@ namespace ThreeChartsAPI.Services
 
             var currentChartStartDate = firstChartStartDate;
             var currentChartEndDate = firstChartEndDate;
-            var currentWeekNumber = 1;
+            var currentWeekNumber = startWeekNumber;
 
             while (currentChartEndDate < endDate)
             {

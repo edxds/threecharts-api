@@ -24,9 +24,10 @@ namespace ThreeChartsAPI.Services.Onboarding
             _lastFm = lastFmService;
         }
 
-        public async Task<Result> SyncWeeks(User user, DateTime startDate, DateTime? endDate)
+        public async Task<Result> SyncWeeks(User user, int startWeekNumber, DateTime startDate, DateTime? endDate)
         {
             var weeks = _chartWeekService.GetChartWeeksInDateRange(
+                startWeekNumber,
                 startDate,
                 endDate ?? DateTime.Now
             );
