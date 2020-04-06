@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -130,6 +131,39 @@ namespace ThreeChartsAPI.Controllers
                 .ToList();
 
             return Ok(weekDtos);
+        }
+
+        [HttpGet]
+        [Route("outdated-weeks")]
+        public async Task<ActionResult<UserWeeksDto>> GetOutdatedWeeks()
+        {
+            var userName = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            if (userName == null)
+            {
+                return Unauthorized();
+            }
+
+            var user = await _userService.FindUserFromUserName(userName);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            var outdatedWeeks = await _chartWeekService.GetOutdatedWeeks(
+                user.Id,
+                user.RegisteredAt,
+                DateTime.Now);
+
+            return new UserWeeksDto()
+            {
+                Weeks = outdatedWeeks.Select(week => new UserWeekDto()
+                {
+                    OwnerId = user.Id,
+                    WeekNumber = week.WeekNumber,
+                    From = week.From,
+                    To = week.To,
+                }).ToList()
+            };
         }
     }
 }
