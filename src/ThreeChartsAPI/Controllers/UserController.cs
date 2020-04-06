@@ -94,7 +94,7 @@ namespace ThreeChartsAPI.Controllers
 
             var weeks = await _chartWeekService.GetUserChartWeeks(user.Id);
             var syncStartDate = user.RegisteredAt;
-            var startWeekNumber = 0;
+            var startWeekNumber = 1;
             if (weeks.Count > 0)
             {
                 var lastestWeek = weeks.OrderByDescending(week => week.WeekNumber).First();
