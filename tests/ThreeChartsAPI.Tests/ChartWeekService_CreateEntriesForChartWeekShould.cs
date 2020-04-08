@@ -17,7 +17,7 @@ namespace ThreeChartsAPI.Tests
     public class ChartWeekService_CreateEntriesForChartWeekShould
     {
         [Fact]
-        public async Task CreateEntriesForChartWeek_ShouldSaveTracksWithoutRepetition()
+        public async Task CreateEntriesForChartWeek_ShouldUseExistingTracksFirst()
         {
             var lastFm = new Mock<ILastFmService>();
             lastFm
@@ -62,13 +62,16 @@ namespace ThreeChartsAPI.Tests
                 var albumChart = await lastFm.Object.GetWeeklyAlbumChart("", 0, 0);
                 var artistChart = await lastFm.Object.GetWeeklyArtistChart("", 0, 0);
 
-                await chartWeekService.CreateEntriesForLastFmCharts(
+                defaultWeek.ChartEntries = await chartWeekService.CreateEntriesForLastFmCharts(
                     trackChart.Value,
                     albumChart.Value,
                     artistChart.Value,
                     defaultWeek
                 );
             }
+
+            await context.ChartWeeks.AddAsync(defaultWeek);
+            await context.SaveChangesAsync();
 
             var savedTracks = await context.Tracks.ToListAsync();
 
