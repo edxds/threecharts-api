@@ -10,5 +10,6 @@ namespace ThreeChartsAPI.Models.Dtos
         public string? LastFmUrl { get; set; }
         public string? ProfilePicture { get; set; }
         public DateTime RegisteredAt { get; set; }
+        public string? IanaTimezone { get; set; }
     }
 }

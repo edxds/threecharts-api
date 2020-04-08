@@ -72,7 +72,7 @@ namespace ThreeChartsAPI.Tests
             await context.Users.AddAsync(user);
             await context.SaveChangesAsync();
 
-            await _onboardingService.SyncWeeks(user, 1, user.RegisteredAt, nowDate);
+            await _onboardingService.SyncWeeks(user, 1, user.RegisteredAt, nowDate, TimeZoneInfo.Utc);
 
             var actualWeeks = await context.ChartWeeks
                 .Where(week => week.OwnerId == user.Id)

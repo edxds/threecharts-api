@@ -17,20 +17,25 @@ namespace ThreeChartsAPI.Services
             _context = context;
         }
 
-        public List<ChartWeek> GetChartWeeksInDateRange(int startWeekNumber, DateTime startDate, DateTime endDate)
+        public List<ChartWeek> GetChartWeeksInDateRange(
+            int startWeekNumber,
+            DateTime startDate,
+            DateTime endDate,
+            TimeZoneInfo timeZone)
         {
             var chartWeekList = new List<ChartWeek>();
 
-            var startDateWithoutTime = new DateTime(
+            var startDateWithoutTimeUnspecified = DateTime.SpecifyKind(new DateTime(
                 startDate.Year,
                 startDate.Month,
-                startDate.Day
-            );
+                startDate.Day), DateTimeKind.Unspecified);
 
-            var daysUntilFriday = DayOfWeek.Friday - startDateWithoutTime.DayOfWeek;
-            var ticksUntilFriday = TimeSpan.TicksPerDay * daysUntilFriday;
+            var startDateWithoutTimeUtc = TimeZoneInfo.ConvertTimeToUtc(
+                startDateWithoutTimeUnspecified,
+                timeZone);
 
-            var firstChartStartDate = new DateTime(startDateWithoutTime.Ticks + ticksUntilFriday);
+            var daysUntilFriday = DayOfWeek.Friday - startDateWithoutTimeUtc.DayOfWeek;
+            var firstChartStartDate = startDateWithoutTimeUtc.AddDays(daysUntilFriday);
             var firstChartEndDate = GetChartEndDateForStartDate(firstChartStartDate);
 
             if (firstChartEndDate > endDate)
@@ -80,16 +85,18 @@ namespace ThreeChartsAPI.Services
         public async Task<List<ChartWeek>> GetOutdatedWeeks(
             int ownerId,
             DateTime defaultStartDate,
-            DateTime endDate)
+            DateTime endDate,
+            TimeZoneInfo timeZone)
         {
             var lastWeek = await _context.ChartWeeks.Where(week => week.OwnerId == ownerId)
                 .OrderByDescending(week => week.WeekNumber)
-                .FirstAsync();
+                .FirstOrDefaultAsync();
 
             return GetChartWeeksInDateRange(
                 lastWeek?.WeekNumber + 1 ?? 1,
                 lastWeek?.To.AddSeconds(1) ?? defaultStartDate,
-                endDate);
+                endDate,
+                timeZone);
         }
 
         public async Task<List<ChartEntry>> CreateEntriesForLastFmCharts(

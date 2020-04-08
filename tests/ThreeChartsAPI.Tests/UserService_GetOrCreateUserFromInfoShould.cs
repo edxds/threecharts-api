@@ -21,13 +21,13 @@ namespace ThreeChartsAPI.Tests
             {
                 Id = 1,
                 UserName = "edxds",
-                RegisteredAt = new DateTime(2020, 3, 3),
+                RegisteredAt = new DateTime(2020, 3, 3, 0, 0, 0, DateTimeKind.Utc),
             };
 
             var actualUser = await service.GetOrCreateUserFromInfo(new LastFmUserInfo()
             {
                 Name = "edxds",
-                RegisterDate = new DateTimeOffset(new DateTime(2020, 3, 3)).ToUnixTimeSeconds(),
+                RegisterDate = 1583193600,
             });
 
             actualUser.Should().BeEquivalentTo(expectedUser);
@@ -41,7 +41,7 @@ namespace ThreeChartsAPI.Tests
             var expectedUser = new User()
             {
                 UserName = "edxds",
-                RegisteredAt = new DateTime(2020, 3, 3)
+                RegisteredAt = new DateTime(2020, 3, 3, 0, 0, 0, DateTimeKind.Utc)
             };
 
             await _context.Users.AddAsync(expectedUser);
@@ -50,7 +50,7 @@ namespace ThreeChartsAPI.Tests
             var actualUser = await service.GetOrCreateUserFromInfo(new LastFmUserInfo()
             {
                 Name = "edxds",
-                RegisterDate = new DateTimeOffset(new DateTime(2020, 3, 3)).ToUnixTimeMilliseconds(),
+                RegisterDate = 1583193600,
             });
 
             actualUser.Should().BeEquivalentTo(expectedUser);

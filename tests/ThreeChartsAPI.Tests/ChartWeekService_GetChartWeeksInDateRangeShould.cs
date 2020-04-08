@@ -40,7 +40,7 @@ namespace ThreeChartsAPI.Tests
                 },
             };
 
-            var actualWeeks = _service.GetChartWeeksInDateRange(1, startDate, endDate);
+            var actualWeeks = _service.GetChartWeeksInDateRange(1, startDate, endDate, TimeZoneInfo.Utc);
             actualWeeks.Should().BeEquivalentTo(expectedWeeks);
         }
 
@@ -72,7 +72,7 @@ namespace ThreeChartsAPI.Tests
                 },
             };
 
-            var actualWeeks = _service.GetChartWeeksInDateRange(1, startDate, endDate);
+            var actualWeeks = _service.GetChartWeeksInDateRange(1, startDate, endDate, TimeZoneInfo.Utc);
             actualWeeks.Should().BeEquivalentTo(expectedWeeks);
         }
 
@@ -84,7 +84,7 @@ namespace ThreeChartsAPI.Tests
 
             var expectedWeeks = new List<ChartWeek>();
 
-            var actualWeeks = _service.GetChartWeeksInDateRange(1, startDate, endDate);
+            var actualWeeks = _service.GetChartWeeksInDateRange(1, startDate, endDate, TimeZoneInfo.Utc);
             actualWeeks.Should().BeEquivalentTo(expectedWeeks);
         }
     }

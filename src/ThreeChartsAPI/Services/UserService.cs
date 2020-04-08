@@ -29,8 +29,7 @@ namespace ThreeChartsAPI.Services
 
             var registeredAt = DateTimeOffset
                 .FromUnixTimeSeconds(userInfo.RegisterDate)
-                .DateTime
-                .ToLocalTime();
+                .DateTime;
 
             var newUser = new User()
             {

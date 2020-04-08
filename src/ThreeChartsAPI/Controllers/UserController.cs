@@ -10,6 +10,7 @@ using ThreeChartsAPI.Models.LastFm.Dtos;
 using ThreeChartsAPI.Services;
 using ThreeChartsAPI.Services.LastFm;
 using ThreeChartsAPI.Services.Onboarding;
+using TimeZoneConverter;
 
 namespace ThreeChartsAPI.Controllers
 {
@@ -74,6 +75,7 @@ namespace ThreeChartsAPI.Controllers
                 LastFmUrl = user.LastFmUrl,
                 ProfilePicture = user.ProfilePicture,
                 RegisteredAt = user.RegisteredAt,
+                IanaTimezone = user.IanaTimezone,
             });
         }
 
@@ -93,6 +95,11 @@ namespace ThreeChartsAPI.Controllers
                 return NotFound();
             }
 
+            if (user.IanaTimezone == null)
+            {
+                return BadRequest();
+            }
+
             var weeks = await _chartWeekService.GetUserChartWeeks(user.Id);
             var syncStartDate = user.RegisteredAt;
             var startWeekNumber = 1;
@@ -103,7 +110,14 @@ namespace ThreeChartsAPI.Controllers
                 startWeekNumber = lastestWeek.WeekNumber + 1;
             }
 
-            var syncResult = await _onboardingService.SyncWeeks(user, startWeekNumber, syncStartDate, null);
+            var userTimeZone = TZConvert.GetTimeZoneInfo(user.IanaTimezone);
+            var syncResult = await _onboardingService.SyncWeeks(
+                user,
+                startWeekNumber,
+                syncStartDate,
+                null,
+                userTimeZone);
+
             if (syncResult.IsFailed)
             {
                 var lastFmError = syncResult.Errors.Find(error =>
@@ -149,10 +163,17 @@ namespace ThreeChartsAPI.Controllers
                 return Unauthorized();
             }
 
+            if (user.IanaTimezone == null)
+            {
+                return BadRequest();
+            }
+
+            var userTimeZone = TZConvert.GetTimeZoneInfo(user.IanaTimezone);
             var outdatedWeeks = await _chartWeekService.GetOutdatedWeeks(
                 user.Id,
                 user.RegisteredAt,
-                DateTime.Now);
+                DateTime.Now,
+                userTimeZone);
 
             return new UserWeeksDto()
             {

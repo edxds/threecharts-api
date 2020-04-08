@@ -26,12 +26,18 @@ namespace ThreeChartsAPI.Services.Onboarding
             _lastFm = lastFmService;
         }
 
-        public async Task<Result> SyncWeeks(User user, int startWeekNumber, DateTime startDate, DateTime? endDate)
+        public async Task<Result> SyncWeeks(
+            User user,
+            int startWeekNumber,
+            DateTime startDate,
+            DateTime? endDate,
+            TimeZoneInfo timeZone)
         {
             var newWeeks = _chartWeekService.GetChartWeeksInDateRange(
                 startWeekNumber,
                 startDate,
-                endDate ?? DateTime.Now
+                endDate ?? DateTime.Now,
+                timeZone
             );
 
             var trackChartTasks = newWeeks
