@@ -90,6 +90,7 @@ namespace ThreeChartsAPI.Controllers
                 LastFmUrl = user.LastFmUrl,
                 ProfilePicture = user.ProfilePicture,
                 RegisteredAt = user.RegisteredAt,
+                IanaTimezone = user.IanaTimezone,
             });
         }
 
