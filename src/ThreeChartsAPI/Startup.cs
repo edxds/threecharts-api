@@ -28,6 +28,17 @@ namespace ThreeChartsAPI
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(builder =>
+                {
+                    builder.SetIsOriginAllowed(_ => true);
+                    builder.AllowCredentials()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+            });
+
             services.AddControllers()
                 .AddJsonOptions(options =>
                 {
@@ -65,6 +76,7 @@ namespace ThreeChartsAPI
                 .AddCookie(options =>
                 {
                     options.Cookie.Name = "threecharts_identity";
+                    options.Cookie.SameSite = SameSiteMode.None;
                     options.Events = new CookieAuthenticationEvents()
                     {
                         OnRedirectToLogin = redirectContext =>
@@ -85,8 +97,10 @@ namespace ThreeChartsAPI
 
             app.UseCookiePolicy(new CookiePolicyOptions()
             {
-                MinimumSameSitePolicy = SameSiteMode.Lax
+                MinimumSameSitePolicy = SameSiteMode.None,
             });
+
+            app.UseCors();
 
             app.UseRouting();
 
