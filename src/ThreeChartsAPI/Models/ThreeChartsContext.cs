@@ -13,6 +13,8 @@ namespace ThreeChartsAPI.Models
 
         public ThreeChartsContext(DbContextOptions<ThreeChartsContext> options) : base(options) { }
 
+        public DbSet<SpotifyApiToken> SpotifyApiTokens { get; set; } = null!;
+        
         public DbSet<Album> Albums { get; set; } = null!;
         public DbSet<Artist> Artists { get; set; } = null!;
         public DbSet<Track> Tracks { get; set; } = null!;

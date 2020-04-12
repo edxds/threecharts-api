@@ -56,21 +56,30 @@ namespace ThreeChartsAPI
                 c.BaseAddress = new Uri("http://ws.audioscrobbler.com/2.0/");
             });
 
-            services.AddSingleton<ILastFmDeserializer, LastFmJsonDeserializer>();
-
+            // LastFm service registration
             services.AddSingleton(
                 new HttpLastFmService.Settings(
                     Configuration.GetValue<string>("LastFmApiKey"),
                     Configuration.GetValue<string>("LastFmApiSecret")
                 )
             );
-
+            
+            services.AddSingleton<ILastFmDeserializer, LastFmJsonDeserializer>();
             services.AddSingleton<ILastFmService, HttpLastFmService>();
+            
+            // Spotify provider registration
+            services.AddSingleton(
+                new DefaultSpotifyAPIProvider.Settings(
+                    Configuration.GetValue<string>("SpotifyClientId"),
+                    Configuration.GetValue<string>("SpotifyClientSecret")));
+
+            services.AddScoped<ISpotifyAPIProvider, DefaultSpotifyAPIProvider>();
 
             // Services that use DbContext should be scoped
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IChartWeekService, ChartWeekService>();
             services.AddScoped<IOnboardingService, OnboardingService>();
+            services.AddScoped<IArtworkService, SpotifyArtworkService>();
 
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>

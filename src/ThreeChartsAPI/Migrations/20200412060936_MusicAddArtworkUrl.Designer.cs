@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ThreeChartsAPI.Models;
@@ -9,9 +10,10 @@ using ThreeChartsAPI.Models;
 namespace ThreeChartsAPI.Migrations
 {
     [DbContext(typeof(ThreeChartsContext))]
-    partial class ThreeChartsContextModelSnapshot : ModelSnapshot
+    [Migration("20200412060936_MusicAddArtworkUrl")]
+    partial class MusicAddArtworkUrl
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -161,27 +163,6 @@ namespace ThreeChartsAPI.Migrations
                         .HasName("ix_chart_weeks_owner_id");
 
                     b.ToTable("chart_weeks");
-                });
-
-            modelBuilder.Entity("ThreeChartsAPI.Models.SpotifyApiToken", b =>
-                {
-                    b.Property<string>("Token")
-                        .HasColumnName("token")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnName("expires_at")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnName("type")
-                        .HasColumnType("text");
-
-                    b.HasKey("Token")
-                        .HasName("pk_spotify_api_tokens");
-
-                    b.ToTable("spotify_api_tokens");
                 });
 
             modelBuilder.Entity("ThreeChartsAPI.Models.Track", b =>
