@@ -58,7 +58,7 @@ namespace ThreeChartsAPI.Controllers
             {
                 return BadRequest();
             }
-            
+
             return Ok(new UserDto
             {
                 Id = user.Id,
@@ -70,7 +70,7 @@ namespace ThreeChartsAPI.Controllers
                 IanaTimezone = user.IanaTimezone,
             });
         }
-        
+
         [HttpGet]
         [Route("details")]
         public async Task<ActionResult<UserDto>> GetDetails()
@@ -179,7 +179,7 @@ namespace ThreeChartsAPI.Controllers
                 })
                 .ToList();
 
-            return Ok(weekDtos);
+            return Ok(new UserWeeksDto { Weeks = weekDtos });
         }
 
         [HttpGet]
