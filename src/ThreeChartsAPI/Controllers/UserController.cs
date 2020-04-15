@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ThreeChartsAPI.Models;
 using ThreeChartsAPI.Models.Dtos;
 using ThreeChartsAPI.Models.LastFm;
 using ThreeChartsAPI.Models.LastFm.Dtos;
@@ -36,6 +37,40 @@ namespace ThreeChartsAPI.Controllers
             _lastFm = lastFmService;
         }
 
+        [HttpPut("preferences")]
+        public async Task<ActionResult<UserDto>> UpdatePreferences(
+            [FromBody] UserPreferencesDto preferencesDto)
+        {
+            var userName = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            if (userName == null)
+            {
+                return Unauthorized();
+            }
+
+            var user = await _userService.FindUserFromUserName(userName);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var updateResult = await _userService.UpdateUserPreferences(user, preferencesDto);
+            if (updateResult.IsFailed)
+            {
+                return BadRequest();
+            }
+            
+            return Ok(new UserDto
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                RealName = user.RealName,
+                LastFmUrl = user.LastFmUrl,
+                ProfilePicture = user.ProfilePicture,
+                RegisteredAt = user.RegisteredAt,
+                IanaTimezone = user.IanaTimezone,
+            });
+        }
+        
         [HttpGet]
         [Route("details")]
         public async Task<ActionResult<UserDto>> GetDetails()

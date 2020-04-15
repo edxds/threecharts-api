@@ -1,9 +1,11 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using ThreeChartsAPI.Models;
 using ThreeChartsAPI.Models.LastFm;
+using TimeZoneConverter;
 
 namespace ThreeChartsAPI.Services
 {
@@ -14,6 +16,21 @@ namespace ThreeChartsAPI.Services
         public UserService(ThreeChartsContext context)
         {
             _context = context;
+        }
+
+        public async Task<Result> UpdateUserPreferences(User user, UserPreferencesDto newPreferences)
+        {
+            TimeZoneInfo info;
+            var validTimeZone = TZConvert.TryGetTimeZoneInfo(newPreferences.IanaTimezone, out info);
+            if (!validTimeZone)
+            {
+                return Results.Fail("Invalid time zone");
+            }
+            
+            user.IanaTimezone = newPreferences.IanaTimezone;
+            await _context.SaveChangesAsync();
+
+            return Results.Ok();
         }
 
         public async Task<User> GetOrCreateUserFromInfo(LastFmUserInfo userInfo)
