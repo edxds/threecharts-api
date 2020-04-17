@@ -204,10 +204,11 @@ namespace ThreeChartsAPI.Controllers
             }
 
             var userTimeZone = TZConvert.GetTimeZoneInfo(user.IanaTimezone);
+            var utcNow = DateTime.UtcNow;
             var outdatedWeeks = await _chartWeekService.GetOutdatedWeeks(
                 user.Id,
                 user.RegisteredAt,
-                DateTime.Now,
+                utcNow,
                 userTimeZone);
 
             return new UserWeeksDto()

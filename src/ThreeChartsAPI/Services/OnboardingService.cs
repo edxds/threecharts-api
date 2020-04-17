@@ -36,7 +36,7 @@ namespace ThreeChartsAPI.Services.Onboarding
             var newWeeks = _chartWeekService.GetChartWeeksInDateRange(
                 startWeekNumber,
                 startDate,
-                endDate ?? DateTime.Now,
+                endDate ?? DateTime.UtcNow,
                 timeZone
             );
 
