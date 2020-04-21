@@ -18,18 +18,18 @@ namespace ThreeChartsAPI.Features.Users
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
-        private readonly IOnboardingService _onboardingService;
+        private readonly IChartService _chartService;
         private readonly IChartWeekService _chartWeekService;
         private readonly ILastFmService _lastFm;
 
         public UserController(
             IUserService userService,
-            IOnboardingService onboardingService,
+            IChartService chartService,
             IChartWeekService chartWeekService,
             ILastFmService lastFmService)
         {
             _userService = userService;
-            _onboardingService = onboardingService;
+            _chartService = chartService;
             _chartWeekService = chartWeekService;
             _lastFm = lastFmService;
         }
@@ -143,7 +143,7 @@ namespace ThreeChartsAPI.Features.Users
             }
 
             var userTimeZone = TZConvert.GetTimeZoneInfo(user.IanaTimezone);
-            var syncResult = await _onboardingService.SyncWeeks(
+            var syncResult = await _chartService.SyncWeeks(
                 user,
                 startWeekNumber,
                 syncStartDate,

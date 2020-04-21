@@ -10,13 +10,13 @@ using ThreeChartsAPI.Features.Users.Models;
 
 namespace ThreeChartsAPI.Features.Charts
 {
-    public class OnboardingService : IOnboardingService
+    public class ChartService : IChartService
     {
         private readonly ThreeChartsContext _context;
         private readonly IChartWeekService _chartWeekService;
         private readonly ILastFmService _lastFm;
 
-        public OnboardingService(
+        public ChartService(
             ThreeChartsContext context,
             IChartWeekService chartWeekService,
             ILastFmService lastFmService)

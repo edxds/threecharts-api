@@ -5,7 +5,7 @@ using ThreeChartsAPI.Features.Users.Models;
 
 namespace ThreeChartsAPI.Features.Charts
 {
-    public interface IOnboardingService
+    public interface IChartService
     {
         Task<Result> SyncWeeks(
             User user,

@@ -15,17 +15,16 @@ using ThreeChartsAPI.Features.Users.Models;
 
 namespace ThreeChartsAPI.Tests
 {
-    public class OnboardingService_SyncWeeksShould
+    public class ChartService_SyncWeeksShould
     {
-        private readonly ThreeChartsContext context = ThreeChartsTestContext.BuildInMemoryContext();
+        private readonly ThreeChartsContext _context = ThreeChartsTestContext.BuildInMemoryContext();
 
-        private readonly ChartWeekService _chartWeekService;
-        private readonly OnboardingService _onboardingService;
+        private readonly ChartService _chartService;
 
         private readonly DateTime userRegisterDate = new DateTime(2020, 3, 6);
         private readonly DateTime nowDate = new DateTime(2020, 3, 13);
 
-        public OnboardingService_SyncWeeksShould()
+        public ChartService_SyncWeeksShould()
         {
             var lastFmMock = new Mock<ILastFmService>();
             lastFmMock
@@ -61,20 +60,20 @@ namespace ThreeChartsAPI.Tests
                     })
                 );
 
-            _chartWeekService = new ChartWeekService(context);
-            _onboardingService = new OnboardingService(context, _chartWeekService, lastFmMock.Object);
+            var chartWeekService = new ChartWeekService(_context);
+            _chartService = new ChartService(_context, chartWeekService, lastFmMock.Object);
         }
 
         [Fact]
         public async Task SyncWeeks_WithGenericUser_SavesWeeksCorrectly()
         {
             var user = new User() { UserName = "edxds", RegisteredAt = userRegisterDate };
-            await context.Users.AddAsync(user);
-            await context.SaveChangesAsync();
+            await _context.Users.AddAsync(user);
+            await _context.SaveChangesAsync();
 
-            await _onboardingService.SyncWeeks(user, 1, user.RegisteredAt, nowDate, TimeZoneInfo.Utc);
+            await _chartService.SyncWeeks(user, 1, user.RegisteredAt, nowDate, TimeZoneInfo.Utc);
 
-            var actualWeeks = await context.ChartWeeks
+            var actualWeeks = await _context.ChartWeeks
                 .Where(week => week.OwnerId == user.Id)
                 .ToListAsync();
 
