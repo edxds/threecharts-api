@@ -45,7 +45,7 @@ namespace ThreeChartsAPI.Tests
                     new LastFmChart<LastFmChartArtist>() { Entries = new List<LastFmChartArtist>() })
                 );
 
-            var context = ThreeChartsTestContext.BuildInMemoryContext();
+            var context = FakeThreeChartsContext.BuildInMemoryContext();
             var chartDateService = new ChartDateService(context);
             var chartService = new ChartService(context, chartDateService, lastFm.Object);
 

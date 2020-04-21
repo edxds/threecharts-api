@@ -17,7 +17,7 @@ namespace ThreeChartsAPI.Tests
 {
     public class ChartService_SyncWeeksShould
     {
-        private readonly ThreeChartsContext _context = ThreeChartsTestContext.BuildInMemoryContext();
+        private readonly ThreeChartsContext _context = FakeThreeChartsContext.BuildInMemoryContext();
 
         private readonly ChartService _chartService;
 

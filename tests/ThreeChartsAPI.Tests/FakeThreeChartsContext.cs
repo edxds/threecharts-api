@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ThreeChartsAPI.Tests
 {
-    public static class ThreeChartsTestContext
+    public static class FakeThreeChartsContext
     {
         public static ThreeChartsContext BuildInMemoryContext()
         {

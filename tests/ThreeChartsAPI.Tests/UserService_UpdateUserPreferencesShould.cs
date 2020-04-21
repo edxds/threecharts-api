@@ -10,7 +10,7 @@ namespace ThreeChartsAPI.Tests
     public class UserService_UpdateUserPreferencesShould
     {
         private readonly ThreeChartsContext
-            _context = ThreeChartsTestContext.BuildInMemoryContext();
+            _context = FakeThreeChartsContext.BuildInMemoryContext();
 
         [Fact]
         public async Task UpdateUserPreferences_WithValidTimeZone_UpdatesUserCorrectly()

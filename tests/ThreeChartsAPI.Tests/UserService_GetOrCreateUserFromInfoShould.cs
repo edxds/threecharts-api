@@ -10,7 +10,7 @@ namespace ThreeChartsAPI.Tests
 {
     public class UserService_GetOrCreateUserFromInfoShould
     {
-        private ThreeChartsContext _context = ThreeChartsTestContext.BuildInMemoryContext();
+        private ThreeChartsContext _context = FakeThreeChartsContext.BuildInMemoryContext();
 
         [Fact]
         public async Task GetOrCreateUserFromInfo_CreatesUser()

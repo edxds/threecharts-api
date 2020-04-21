@@ -14,7 +14,7 @@ namespace ThreeChartsAPI.Tests
 
         public ChartWeekService_GetChartWeeksInDateRangeShould()
         {
-            var context = ThreeChartsTestContext.BuildInMemoryContext();
+            var context = FakeThreeChartsContext.BuildInMemoryContext();
             _service = new ChartDateService(context);
         }
 
