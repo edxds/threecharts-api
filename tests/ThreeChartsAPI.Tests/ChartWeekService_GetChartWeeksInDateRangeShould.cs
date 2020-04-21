@@ -10,12 +10,12 @@ namespace ThreeChartsAPI.Tests
 {
     public class ChartWeekService_GetChartWeeksInDateRangeShould
     {
-        private readonly ChartWeekService _service;
+        private readonly ChartDateService _service;
 
         public ChartWeekService_GetChartWeeksInDateRangeShould()
         {
             var context = ThreeChartsTestContext.BuildInMemoryContext();
-            _service = new ChartWeekService(context);
+            _service = new ChartDateService(context);
         }
 
         [Fact]

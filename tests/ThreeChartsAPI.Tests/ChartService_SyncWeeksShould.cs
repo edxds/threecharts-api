@@ -60,7 +60,7 @@ namespace ThreeChartsAPI.Tests
                     })
                 );
 
-            var chartWeekService = new ChartWeekService(_context);
+            var chartWeekService = new ChartDateService(_context);
             _chartService = new ChartService(_context, chartWeekService, lastFmMock.Object);
         }
 

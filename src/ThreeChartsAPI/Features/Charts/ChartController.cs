@@ -13,17 +13,17 @@ namespace ThreeChartsAPI.Features.Charts
     [Route("api/charts")]
     public class ChartController : ControllerBase
     {
-        private readonly IChartWeekService _weekService;
+        private readonly IChartService _chartService;
 
-        public ChartController(IChartWeekService weekService)
+        public ChartController(IChartService chartService)
         {
-            _weekService = weekService;
+            _chartService = chartService;
         }
 
         [HttpGet("weeks/{ownerId}")]
         public async Task<ActionResult<UserWeeksDto>> GetWeeks(int ownerId)
         {
-            var weeks = await _weekService.GetUserChartWeeks(ownerId);
+            var weeks = await _chartService.GetUserChartWeeks(ownerId);
             var weekDtos = weeks
                 .OrderBy(week => week.WeekNumber)
                 .Select(week => new UserWeekDto()
@@ -42,7 +42,7 @@ namespace ThreeChartsAPI.Features.Charts
         [HttpGet("weeks/{ownerId}/{weekId}")]
         public async Task<ActionResult<ChartsDto>> GetUserCharts(int ownerId, int weekId)
         {
-            var week = await _weekService.GetChartWeek(ownerId, weekId);
+            var week = await _chartService.GetChartWeek(ownerId, weekId);
             if (week == null)
             {
                 return NotFound();

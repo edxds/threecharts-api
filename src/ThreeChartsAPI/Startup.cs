@@ -78,7 +78,7 @@ namespace ThreeChartsAPI
 
             // Services that use DbContext should be scoped
             services.AddScoped<IUserService, UserService>();
-            services.AddScoped<IChartWeekService, ChartWeekService>();
+            services.AddScoped<IChartDateService, ChartDateService>();
             services.AddScoped<IChartService, ChartService>();
             services.AddScoped<IArtworkService, SpotifyArtworkService>();
 

@@ -19,18 +19,18 @@ namespace ThreeChartsAPI.Features.Users
     {
         private readonly IUserService _userService;
         private readonly IChartService _chartService;
-        private readonly IChartWeekService _chartWeekService;
+        private readonly IChartDateService _chartDateService;
         private readonly ILastFmService _lastFm;
 
         public UserController(
             IUserService userService,
             IChartService chartService,
-            IChartWeekService chartWeekService,
+            IChartDateService chartDateService,
             ILastFmService lastFmService)
         {
             _userService = userService;
             _chartService = chartService;
-            _chartWeekService = chartWeekService;
+            _chartDateService = chartDateService;
             _lastFm = lastFmService;
         }
 
@@ -132,7 +132,7 @@ namespace ThreeChartsAPI.Features.Users
                 return BadRequest();
             }
 
-            var weeks = await _chartWeekService.GetUserChartWeeks(user.Id);
+            var weeks = await _chartService.GetUserChartWeeks(user.Id);
             var syncStartDate = user.RegisteredAt;
             var startWeekNumber = 1;
             if (weeks.Count > 0)
@@ -163,7 +163,7 @@ namespace ThreeChartsAPI.Features.Users
                 });
             }
 
-            var syncedWeeks = await _chartWeekService.GetUserChartWeeks(user.Id);
+            var syncedWeeks = await _chartService.GetUserChartWeeks(user.Id);
             var weekDtos = syncedWeeks
                 .OrderBy(week => week.WeekNumber)
                 .Select(week => new UserWeekDto()
@@ -202,7 +202,7 @@ namespace ThreeChartsAPI.Features.Users
 
             var userTimeZone = TZConvert.GetTimeZoneInfo(user.IanaTimezone);
             var utcNow = DateTime.UtcNow;
-            var outdatedWeeks = await _chartWeekService.GetOutdatedWeeks(
+            var outdatedWeeks = await _chartDateService.GetOutdatedWeeks(
                 user.Id,
                 user.RegisteredAt,
                 utcNow,

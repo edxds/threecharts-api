@@ -15,7 +15,7 @@ using Xunit;
 
 namespace ThreeChartsAPI.Tests
 {
-    public class ChartWeekService_CreateEntriesForChartWeekShould
+    public class ChartService_CreateEntriesForChartWeekShould
     {
         [Fact]
         public async Task CreateEntriesForChartWeek_ShouldUseExistingTracksFirst()
@@ -46,7 +46,8 @@ namespace ThreeChartsAPI.Tests
                 );
 
             var context = ThreeChartsTestContext.BuildInMemoryContext();
-            var chartWeekService = new ChartWeekService(context);
+            var chartDateService = new ChartDateService(context);
+            var chartService = new ChartService(context, chartDateService, lastFm.Object);
 
             var user = new User() { UserName = "edxds" };
             var defaultWeek = new ChartWeek()
@@ -63,7 +64,7 @@ namespace ThreeChartsAPI.Tests
                 var albumChart = await lastFm.Object.GetWeeklyAlbumChart("", 0, 0);
                 var artistChart = await lastFm.Object.GetWeeklyArtistChart("", 0, 0);
 
-                defaultWeek.ChartEntries = await chartWeekService.CreateEntriesForLastFmCharts(
+                defaultWeek.ChartEntries = await chartService.CreateEntriesForLastFmCharts(
                     trackChart.Value,
                     albumChart.Value,
                     artistChart.Value,

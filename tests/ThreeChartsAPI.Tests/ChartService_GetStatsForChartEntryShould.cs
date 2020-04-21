@@ -13,7 +13,7 @@ using Xunit;
 
 namespace ThreeChartsAPI.Tests
 {
-    public class ChartWeekService_GetStatsForChartEntryShould
+    public class ChartService_GetStatsForChartEntryShould
     {
         [Fact]
         public async Task GetStatsForChart_ReturnsCorrectStats()
@@ -76,7 +76,8 @@ namespace ThreeChartsAPI.Tests
                 );
 
             var context = ThreeChartsTestContext.BuildInMemoryContext();
-            var service = new ChartWeekService(context);
+            var chartDateService = new ChartDateService(context);
+            var chartService = new ChartService(context, chartDateService, lastFmMock.Object);
 
             var weeks = new List<ChartWeek>();
             for (int i = 0; i < 3; i++)
@@ -89,7 +90,7 @@ namespace ThreeChartsAPI.Tests
                 var albumChart = await lastFmMock.Object.GetWeeklyAlbumChart("", 0, 0);
                 var artistChart = await lastFmMock.Object.GetWeeklyArtistChart("", 0, 0);
 
-                week.ChartEntries = await service.CreateEntriesForLastFmCharts(
+                week.ChartEntries = await chartService.CreateEntriesForLastFmCharts(
                     trackChart.Value,
                     albumChart.Value,
                     artistChart.Value,
@@ -100,13 +101,13 @@ namespace ThreeChartsAPI.Tests
             }
 
             var firstWeekResults = weeks[0].ChartEntries.Select(entry
-                => service.GetStatsForChartEntry(entry, weeks)).ToList();
+                => chartService.GetStatsForChartEntry(entry, weeks)).ToList();
 
             var secondWeekResults = weeks[1].ChartEntries.Select(entry
-                => service.GetStatsForChartEntry(entry, weeks)).ToList();
+                => chartService.GetStatsForChartEntry(entry, weeks)).ToList();
 
             var thirdWeekResults = weeks[2].ChartEntries.Select(entry
-                => service.GetStatsForChartEntry(entry, weeks)).ToList();
+                => chartService.GetStatsForChartEntry(entry, weeks)).ToList();
 
             // All stats on the first week should be .New
             firstWeekResults.ForEach(r => r.stat.Should().Be(ChartEntryStat.New));
