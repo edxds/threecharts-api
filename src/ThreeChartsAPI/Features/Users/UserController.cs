@@ -163,7 +163,7 @@ namespace ThreeChartsAPI.Features.Users
                 });
             }
 
-            var syncedWeeks = await _chartService.GetUserChartWeeks(user.Id);
+            var syncedWeeks = syncResult.Value;
             var weekDtos = syncedWeeks
                 .OrderBy(week => week.WeekNumber)
                 .Select(week => new UserWeekDto()

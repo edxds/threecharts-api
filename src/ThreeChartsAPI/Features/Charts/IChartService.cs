@@ -13,8 +13,8 @@ namespace ThreeChartsAPI.Features.Charts
         Task<ChartWeek> GetChartWeek(int ownerId, int weekId);
         
         Task<List<ChartWeek>> GetUserChartWeeks(int ownerId);
-        
-        Task<Result> SyncWeeks(
+
+        Task<Result<List<ChartWeek>>> SyncWeeks(
             User user,
             int startWeekNumber,
             DateTime startDate,

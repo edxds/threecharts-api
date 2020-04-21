@@ -45,7 +45,7 @@ namespace ThreeChartsAPI.Features.Charts
             return _context.ChartWeeks.Where(week => week.OwnerId == ownerId).ToListAsync();
         }
         
-        public async Task<Result> SyncWeeks(
+        public async Task<Result<List<ChartWeek>>> SyncWeeks(
             User user,
             int startWeekNumber,
             DateTime startDate,
@@ -127,11 +127,11 @@ namespace ThreeChartsAPI.Features.Charts
                     .ThenInclude(entry => entry.Artist)
                 .ToListAsync();
 
-            var previousWeeks = savedWeeks.Concat(newWeeks).ToList();
+            var allWeeks = savedWeeks.Concat(newWeeks).ToList();
 
             entries.ForEach(entry =>
             {
-                var (stat, statText) = GetStatsForChartEntry(entry, previousWeeks);
+                var (stat, statText) = GetStatsForChartEntry(entry, allWeeks);
                 entry.Stat = stat;
                 entry.StatText = statText;
             });
@@ -139,7 +139,7 @@ namespace ThreeChartsAPI.Features.Charts
             await _context.ChartWeeks.AddRangeAsync(newWeeks);
             await _context.SaveChangesAsync();
 
-            return Results.Ok();
+            return Results.Ok(allWeeks);
         }
         
         public async Task<List<ChartEntry>> CreateEntriesForLastFmCharts(
