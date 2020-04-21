@@ -26,13 +26,13 @@ namespace ThreeChartsAPI.Tests
 
             var expectedWeeks = new List<ChartWeek>()
             {
-                new ChartWeek()
+                new ChartWeek
                 {
                     WeekNumber = 1,
                     From = new DateTime(2020, 3, 13),
                     To = new DateTime(2020, 3, 19, 23, 59, 59),
                 },
-                new ChartWeek()
+                new ChartWeek
                 {
                     WeekNumber = 2,
                     From = new DateTime(2020, 3, 20),
@@ -52,21 +52,27 @@ namespace ThreeChartsAPI.Tests
 
             var expectedWeeks = new List<ChartWeek>()
             {
-                new ChartWeek()
+                new ChartWeek
                 {
                     WeekNumber = 1,
+                    From = new DateTime(2020, 3, 3, 0, 0, 0),
+                    To = new DateTime(2020, 3, 5, 23, 59, 59),
+                },
+                new ChartWeek
+                {
+                    WeekNumber = 2,
                     From = new DateTime(2020, 3, 6),
                     To = new DateTime(2020, 3, 12, 23, 59, 59)
                 },
-                new ChartWeek()
+                new ChartWeek
                 {
-                    WeekNumber = 2,
+                    WeekNumber = 3,
                     From = new DateTime(2020, 3, 13),
                     To = new DateTime(2020, 3, 19, 23, 59, 59)
                 },
-                new ChartWeek()
+                new ChartWeek
                 {
-                    WeekNumber = 3,
+                    WeekNumber = 4,
                     From = new DateTime(2020, 3, 20),
                     To = new DateTime(2020, 3, 26, 23, 59, 59)
                 },
@@ -77,12 +83,20 @@ namespace ThreeChartsAPI.Tests
         }
 
         [Fact]
-        public void GetChartWeeksInDateRange_Start0303End0310_ReturnsNoWeeks()
+        public void GetChartWeeksInDateRange_Start0303End0310_ReturnsOneWeek()
         {
             var startDate = new DateTime(2020, 3, 3);
             var endDate = new DateTime(2020, 3, 10);
 
-            var expectedWeeks = new List<ChartWeek>();
+            var expectedWeeks = new List<ChartWeek>
+            {
+                new ChartWeek
+                {
+                    WeekNumber = 1,
+                    From = new DateTime(2020, 3, 3, 0, 0, 0),
+                    To = new DateTime(2020, 3, 5, 23, 59, 59),
+                }
+            };
 
             var actualWeeks = _service.GetChartWeeksInDateRange(1, startDate, endDate, TimeZoneInfo.Utc);
             actualWeeks.Should().BeEquivalentTo(expectedWeeks);

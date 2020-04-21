@@ -25,17 +25,16 @@ namespace ThreeChartsAPI.Services
         {
             var chartWeekList = new List<ChartWeek>();
 
-            var startDateWithoutTimeUnspecified = DateTime.SpecifyKind(new DateTime(
+            var startDateAtMidnightUnspecified = DateTime.SpecifyKind(new DateTime(
                 startDate.Year,
                 startDate.Month,
                 startDate.Day), DateTimeKind.Unspecified);
 
-            var startDateWithoutTimeUtc = TimeZoneInfo.ConvertTimeToUtc(
-                startDateWithoutTimeUnspecified,
+            var startDateMidnightUtc = TimeZoneInfo.ConvertTimeToUtc(
+                startDateAtMidnightUnspecified,
                 timeZone);
 
-            var daysUntilFriday = DayOfWeek.Friday - startDateWithoutTimeUtc.DayOfWeek;
-            var firstChartStartDate = startDateWithoutTimeUtc.AddDays(daysUntilFriday);
+            var firstChartStartDate = startDateMidnightUtc;
             var firstChartEndDate = GetChartEndDateForStartDate(firstChartStartDate);
 
             if (firstChartEndDate > endDate)
@@ -275,11 +274,16 @@ namespace ThreeChartsAPI.Services
 
         private DateTime GetChartEndDateForStartDate(DateTime chartDate)
         {
-            return chartDate
-                    .AddDays(6)
-                    .AddHours(23)
-                    .AddMinutes(59)
-                    .AddSeconds(59);
+            var daysUntilFriday = DayOfWeek.Friday - chartDate.DayOfWeek;
+            
+            // Next friday!
+            if (daysUntilFriday == 0)
+            {
+                daysUntilFriday = 7;
+            }
+            
+            var oneSecond = new TimeSpan(0, 0, 1);
+            return chartDate.AddDays(daysUntilFriday).Subtract(oneSecond);
         }
     }
 }
