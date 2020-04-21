@@ -5,13 +5,13 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Moq;
 using Microsoft.EntityFrameworkCore;
-using ThreeChartsAPI.Models;
-using ThreeChartsAPI.Models.LastFm;
-using ThreeChartsAPI.Services;
-using ThreeChartsAPI.Services.Onboarding;
-using ThreeChartsAPI.Services.LastFm;
 using Xunit;
 using FluentResults;
+using ThreeChartsAPI.Features.Charts;
+using ThreeChartsAPI.Features.Charts.Models;
+using ThreeChartsAPI.Features.LastFm;
+using ThreeChartsAPI.Features.LastFm.Models;
+using ThreeChartsAPI.Features.Users.Models;
 
 namespace ThreeChartsAPI.Tests
 {

@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using ThreeChartsAPI.Models;
+using ThreeChartsAPI.Features.Charts.Models;
 
 namespace ThreeChartsAPI.Migrations
 {

@@ -10,10 +10,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using ThreeChartsAPI.Models;
-using ThreeChartsAPI.Services;
-using ThreeChartsAPI.Services.LastFm;
-using ThreeChartsAPI.Services.Onboarding;
+using ThreeChartsAPI.Features.Artwork;
+using ThreeChartsAPI.Features.Charts;
+using ThreeChartsAPI.Features.LastFm;
+using ThreeChartsAPI.Features.Spotify;
+using ThreeChartsAPI.Features.Users;
 
 namespace ThreeChartsAPI
 {

@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using FluentAssertions;
 using Moq;
-using ThreeChartsAPI.Models;
-using ThreeChartsAPI.Services;
+using ThreeChartsAPI.Features.Charts;
+using ThreeChartsAPI.Features.Charts.Models;
 using Xunit;
 
 namespace ThreeChartsAPI.Tests

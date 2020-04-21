@@ -1,9 +1,9 @@
 using System;
 using System.Threading.Tasks;
 using FluentAssertions;
-using ThreeChartsAPI.Models;
-using ThreeChartsAPI.Models.LastFm;
-using ThreeChartsAPI.Services;
+using ThreeChartsAPI.Features.LastFm.Models;
+using ThreeChartsAPI.Features.Users;
+using ThreeChartsAPI.Features.Users.Models;
 using Xunit;
 
 namespace ThreeChartsAPI.Tests

@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using ThreeChartsAPI.Models;
+using ThreeChartsAPI.Features.Charts.Models;
 
 namespace ThreeChartsAPI.Migrations
 {

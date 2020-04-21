@@ -1,7 +1,8 @@
 using System.Threading.Tasks;
 using FluentAssertions;
-using ThreeChartsAPI.Models;
-using ThreeChartsAPI.Services;
+using ThreeChartsAPI.Features.Users;
+using ThreeChartsAPI.Features.Users.Dtos;
+using ThreeChartsAPI.Features.Users.Models;
 using Xunit;
 
 namespace ThreeChartsAPI.Tests

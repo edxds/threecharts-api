@@ -9,8 +9,8 @@ using FluentAssertions;
 using FluentResults;
 using Moq;
 using Moq.Protected;
-using ThreeChartsAPI.Models.LastFm;
-using ThreeChartsAPI.Services.LastFm;
+using ThreeChartsAPI.Features.LastFm;
+using ThreeChartsAPI.Features.LastFm.Models;
 using Xunit;
 
 namespace ThreeChartsAPI.Tests

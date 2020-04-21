@@ -3,8 +3,8 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
-using ThreeChartsAPI.Models.LastFm;
-using ThreeChartsAPI.Services.LastFm;
+using ThreeChartsAPI.Features.LastFm;
+using ThreeChartsAPI.Features.LastFm.Models;
 using Xunit;
 
 namespace ThreeChartsAPI.Tests
