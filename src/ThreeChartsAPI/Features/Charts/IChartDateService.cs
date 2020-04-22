@@ -13,7 +13,8 @@ namespace ThreeChartsAPI.Features.Charts
             int startWeekNumber,
             DateTime startDate,
             DateTime endDate,
-            TimeZoneInfo timeZone);
+            TimeZoneInfo timeZone,
+            bool toleratesInitialDateOverflow = false);
 
         Task<List<ChartWeek>> GetOutdatedWeeks(
             int ownerId,

@@ -21,7 +21,8 @@ namespace ThreeChartsAPI.Features.Charts
             int startWeekNumber,
             DateTime startDate,
             DateTime endDate,
-            TimeZoneInfo timeZone)
+            TimeZoneInfo timeZone,
+            bool toleratesInitialDateOverflow = false)
         {
             var chartWeekList = new List<ChartWeek>();
 
@@ -37,7 +38,7 @@ namespace ThreeChartsAPI.Features.Charts
             var firstChartStartDate = startDateMidnightUtc;
             var firstChartEndDate = GetChartEndDateForStartDate(firstChartStartDate);
 
-            if (firstChartEndDate > endDate)
+            if (!toleratesInitialDateOverflow && firstChartEndDate > endDate)
             {
                 return chartWeekList;
             }
@@ -46,7 +47,7 @@ namespace ThreeChartsAPI.Features.Charts
             var currentChartEndDate = firstChartEndDate;
             var currentWeekNumber = startWeekNumber;
 
-            while (currentChartEndDate < endDate)
+            do
             {
                 chartWeekList.Add(new ChartWeek()
                 {
@@ -58,7 +59,7 @@ namespace ThreeChartsAPI.Features.Charts
                 currentWeekNumber++;
                 currentChartStartDate = currentChartEndDate.AddSeconds(1);
                 currentChartEndDate = GetChartEndDateForStartDate(currentChartStartDate);
-            }
+            } while (currentChartEndDate < endDate);
 
             return chartWeekList;
         }
