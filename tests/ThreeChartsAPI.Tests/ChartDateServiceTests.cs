@@ -8,23 +8,24 @@ using Xunit;
 
 namespace ThreeChartsAPI.Tests
 {
-    public class ChartWeekService_GetChartWeeksInDateRangeShould
+    public class ChartDateServiceTests
     {
-        private readonly ChartDateService _service;
-
-        public ChartWeekService_GetChartWeeksInDateRangeShould()
-        {
-            var context = FakeThreeChartsContext.BuildInMemoryContext();
-            _service = new ChartDateService(context);
-        }
-
         [Fact]
         public void GetChartWeeksInDateRange_Start0313End0327_ReturnsCorrectWeeks()
         {
+            // Arrange
+            var context = FakeThreeChartsContext.BuildInMemoryContext();
+            var service = new ChartDateService(context);
+
             var startDate = new DateTime(2020, 3, 13, 19, 20, 22);
             var endDate = new DateTime(2020, 3, 27, 15, 23, 44);
 
-            var expectedWeeks = new List<ChartWeek>()
+            // Act
+            var actualWeeks =
+                service.GetChartWeeksInDateRange(1, startDate, endDate, TimeZoneInfo.Utc);
+            
+            // Assert
+            var expectedWeeks = new List<ChartWeek>
             {
                 new ChartWeek
                 {
@@ -40,16 +41,24 @@ namespace ThreeChartsAPI.Tests
                 },
             };
 
-            var actualWeeks = _service.GetChartWeeksInDateRange(1, startDate, endDate, TimeZoneInfo.Utc);
             actualWeeks.Should().BeEquivalentTo(expectedWeeks);
         }
 
         [Fact]
         public void GetChartWeeksInDateRange_Start0303End0327_ReturnsCorrectWeeks()
         {
+            // Arrange
+            var context = FakeThreeChartsContext.BuildInMemoryContext();
+            var service = new ChartDateService(context);
+
             var startDate = new DateTime(2020, 3, 3, 15, 22, 15);
             var endDate = new DateTime(2020, 3, 27, 22, 48, 19);
+            
+            // Act
+            var actualWeeks =
+                service.GetChartWeeksInDateRange(1, startDate, endDate, TimeZoneInfo.Utc);
 
+            // Assert
             var expectedWeeks = new List<ChartWeek>()
             {
                 new ChartWeek
@@ -78,16 +87,24 @@ namespace ThreeChartsAPI.Tests
                 },
             };
 
-            var actualWeeks = _service.GetChartWeeksInDateRange(1, startDate, endDate, TimeZoneInfo.Utc);
             actualWeeks.Should().BeEquivalentTo(expectedWeeks);
         }
 
         [Fact]
         public void GetChartWeeksInDateRange_Start0303End0310_ReturnsOneWeek()
         {
+            // Arrange
+            var context = FakeThreeChartsContext.BuildInMemoryContext();
+            var service = new ChartDateService(context);
+            
             var startDate = new DateTime(2020, 3, 3);
             var endDate = new DateTime(2020, 3, 10);
 
+            // Act
+            var actualWeeks =
+                service.GetChartWeeksInDateRange(1, startDate, endDate, TimeZoneInfo.Utc);
+            
+            // Assert
             var expectedWeeks = new List<ChartWeek>
             {
                 new ChartWeek
@@ -98,7 +115,6 @@ namespace ThreeChartsAPI.Tests
                 }
             };
 
-            var actualWeeks = _service.GetChartWeeksInDateRange(1, startDate, endDate, TimeZoneInfo.Utc);
             actualWeeks.Should().BeEquivalentTo(expectedWeeks);
         }
     }

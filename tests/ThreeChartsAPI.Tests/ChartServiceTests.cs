@@ -1,0 +1,229 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using ThreeChartsAPI.Features.Charts;
+using ThreeChartsAPI.Features.Charts.Models;
+using ThreeChartsAPI.Features.LastFm.Models;
+using ThreeChartsAPI.Features.Users.Models;
+using Xunit;
+
+namespace ThreeChartsAPI.Tests
+{
+    public class ChartServiceTests
+    {
+        [Fact]
+        public async Task CreateEntriesForChartWeek_WithIdenticalTracks_ShouldNotCreateRepetition()
+        {
+            // Arrange
+            var user = new User { UserName = "edxds" };
+            var fakeWeek = new ChartWeek // A fake week is needed to parent the chart entries
+            {
+                Owner = user,
+                From = new DateTime(),
+                To = new DateTime()
+            };
+
+            var lastFmFake = new FakeLastFmService();
+            var lastFmStub = lastFmFake.Object;
+            lastFmFake.Tracks.Add(
+                new LastFmChartTrack { Title = "Love Again", Artist = "Dua Lipa" });
+
+            var context = FakeThreeChartsContext.BuildInMemoryContext();
+            var chartDateService = new ChartDateService(context);
+
+            var chartService = new ChartService(context, chartDateService, lastFmFake.Object);
+
+            // Act
+            // Save two chart entries that have identical track
+            for (var i = 0; i < 2; i++)
+            {
+                var trackChart = await lastFmStub.GetWeeklyTrackChart("", 0, 0);
+                var albumChart = await lastFmStub.GetWeeklyAlbumChart("", 0, 0);
+                var artistChart = await lastFmStub.GetWeeklyArtistChart("", 0, 0);
+
+                fakeWeek.ChartEntries = await chartService.CreateEntriesForLastFmCharts(
+                    trackChart.Value,
+                    albumChart.Value,
+                    artistChart.Value,
+                    fakeWeek
+                );
+            }
+
+            await context.ChartWeeks.AddAsync(fakeWeek);
+            await context.SaveChangesAsync();
+
+            // Assert
+            var savedTracks = await context.Tracks.ToListAsync();
+
+            savedTracks.Should().HaveCount(1);
+            savedTracks[0].Title.Should().Be("Love Again");
+            savedTracks[0].ArtistName.Should().Be("Dua Lipa");
+        }
+        
+        [Fact]
+        public async Task GetStatsForChart_WithMultipleTrackEntries_ReturnsCorrectStats()
+        {
+            // Arrange
+            var lastFmFake = new FakeLastFmService();
+            var lastFmStub = lastFmFake.Object;
+            
+            // Represents the tracks that will be returned over time
+            var tracksList = new List<List<LastFmChartTrack>>
+            {
+                new List<LastFmChartTrack>
+                {
+                    new LastFmChartTrack { Title = "Cool", Artist = "Dua Lipa", Rank = 1 },
+                    new LastFmChartTrack { Title = "Pretty Please", Artist = "Dua Lipa", Rank = 2 },
+                    new LastFmChartTrack { Title = "Hallucinate", Artist = "Dua Lipa", Rank = 3 },
+                    new LastFmChartTrack { Title = "WANNABE", Artist = "ITZY", Rank = 4 },
+                },
+                new List<LastFmChartTrack>
+                {
+                    new LastFmChartTrack { Title = "WANNABE", Artist = "ITZY", Rank = 1 },
+                    new LastFmChartTrack { Title = "Pretty Please", Artist = "Dua Lipa", Rank = 2 },
+                    new LastFmChartTrack { Title = "Cool", Artist = "Dua Lipa", Rank = 3 },
+                },
+                new List<LastFmChartTrack>
+                {
+                    new LastFmChartTrack { Title = "WANNABE", Artist = "ITZY", Rank = 1 },
+                    new LastFmChartTrack { Title = "Pretty Please", Artist = "Dua Lipa", Rank = 2 },
+                    new LastFmChartTrack { Title = "Hallucinate", Artist = "Dua Lipa", Rank = 3 },
+                    new LastFmChartTrack { Title = "Cool", Artist = "Dua Lipa", Rank = 4 },
+                }
+            };
+
+            var context = FakeThreeChartsContext.BuildInMemoryContext();
+            var chartDateService = new ChartDateService(context);
+            
+            var chartService = new ChartService(context, chartDateService, lastFmStub);
+
+            // Act
+            var weeks = new List<ChartWeek>();
+            for (var i = 0; i < 3; i++)
+            {
+                var week = new ChartWeek
+                {
+                    Owner = new User { UserName = "edxds" }, WeekNumber = i + 1
+                };
+
+                // Set LastFm fake to return correct tracks according to index
+                lastFmFake.Tracks = tracksList[i];
+                lastFmFake.SetupFake(); // Updates fake returns
+                
+                var trackChart = await lastFmStub.GetWeeklyTrackChart("", 0, 0);
+                var albumChart = await lastFmStub.GetWeeklyAlbumChart("", 0, 0);
+                var artistChart = await lastFmStub.GetWeeklyArtistChart("", 0, 0);
+
+                week.ChartEntries = await chartService.CreateEntriesForLastFmCharts(
+                    trackChart.Value,
+                    albumChart.Value,
+                    artistChart.Value,
+                    week
+                );
+
+                weeks.Add(week);
+            }
+
+            var results = weeks
+                .Select(w => w.ChartEntries)
+                .Select(entries =>
+                    entries
+                        .Select(entry => chartService.GetStatsForChartEntry(entry, weeks))
+                        .ToList())
+                .ToList();
+
+            // Assert
+            // All stats on the first week should be .New
+            results[0].ForEach(r => r.stat.Should().Be(ChartEntryStat.New));
+
+            results[1].Should().BeEquivalentTo(
+                new List<(ChartEntryStat stat, string statText)>()
+                {
+                    (ChartEntryStat.Increase, "+3"),
+                    (ChartEntryStat.NoDiff, "="),
+                    (ChartEntryStat.Decrease, "-2"),
+                }
+            );
+
+            results[2].Should().BeEquivalentTo(
+                new List<(ChartEntryStat stat, string statText)>()
+                {
+                    (ChartEntryStat.NoDiff, "="),
+                    (ChartEntryStat.NoDiff, "="),
+                    (ChartEntryStat.Reentry, null),
+                    (ChartEntryStat.Decrease, "-1"),
+                }
+            );
+        }
+        
+        [Fact]
+        public async Task SyncWeeks_WithGenericUser_SavesWeeksCorrectly()
+        {
+            // Arrange
+            var context = FakeThreeChartsContext.BuildInMemoryContext();
+            var chartDateService = new ChartDateService(context);
+            
+            var lastFmFake = new FakeLastFmService();
+            var lastFmStub = lastFmFake.Object;
+
+            lastFmFake.Tracks = new List<LastFmChartTrack>
+            {
+                new LastFmChartTrack { Title = "Cool", Artist = "Dua Lipa", Rank = 1 },
+                new LastFmChartTrack { Title = "Pretty Please", Artist = "Dua Lipa", Rank = 2 },
+                new LastFmChartTrack { Title = "Hallucinate", Artist = "Dua Lipa", Rank = 3 },
+                new LastFmChartTrack { Title = "WANNABE", Artist = "ITZY", Rank = 4 },
+            };
+
+            lastFmFake.SetupFake();
+            var service = new ChartService(context, chartDateService, lastFmStub);
+
+            var userRegisterDate = new DateTime(2020, 3, 6);
+            var nowDate = new DateTime(2020, 3, 13);
+            var user = new User() { UserName = "edxds", RegisteredAt = userRegisterDate };
+
+            await context.Users.AddAsync(user);
+            await context.SaveChangesAsync();
+
+            // Act
+            await service.SyncWeeks(user, 1, user.RegisteredAt, nowDate, TimeZoneInfo.Utc);
+
+            // Assert
+            var actualWeeks = await context.ChartWeeks
+                .Where(week => week.OwnerId == user.Id)
+                .ToListAsync();
+
+            actualWeeks.Should().HaveCount(1);
+
+            actualWeeks[0].Owner.Should().BeEquivalentTo(user);
+            actualWeeks[0].From.Should().Be(new DateTime(2020, 3, 6));
+            actualWeeks[0].To.Should().Be(new DateTime(2020, 3, 12, 23, 59, 59));
+
+            actualWeeks[0].ChartEntries.Should().HaveCount(4);
+
+            for (var i = 0; i < actualWeeks[0].ChartEntries.Count; i++)
+            {
+                // All entries on first week should be new
+                var entry = actualWeeks[0].ChartEntries[i];
+                var rank = i + 1;
+
+                entry.Rank.Should().Be(rank);
+                entry.Stat.Should().Be(ChartEntryStat.New);
+            }
+
+            actualWeeks[0].ChartEntries[0].Track!.Title.Should().Be("Cool");
+            actualWeeks[0].ChartEntries[0].Track!.ArtistName.Should().Be("Dua Lipa");
+
+            actualWeeks[0].ChartEntries[1].Track!.Title.Should().Be("Pretty Please");
+            actualWeeks[0].ChartEntries[1].Track!.ArtistName.Should().Be("Dua Lipa");
+
+            actualWeeks[0].ChartEntries[2].Track!.Title.Should().Be("Hallucinate");
+            actualWeeks[0].ChartEntries[2].Track!.ArtistName.Should().Be("Dua Lipa");
+
+            actualWeeks[0].ChartEntries[3].Track!.Title.Should().Be("WANNABE");
+            actualWeeks[0].ChartEntries[3].Track!.ArtistName.Should().Be("ITZY");
+        }
+    }
+}
