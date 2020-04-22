@@ -8,6 +8,7 @@ using ThreeChartsAPI.Features.Charts.Models;
 using ThreeChartsAPI.Features.LastFm;
 using ThreeChartsAPI.Features.LastFm.Models;
 using ThreeChartsAPI.Features.Users.Models;
+using TimeZoneConverter;
 
 namespace ThreeChartsAPI.Features.Charts
 {
@@ -44,7 +45,57 @@ namespace ThreeChartsAPI.Features.Charts
         {
             return _context.ChartWeeks.Where(week => week.OwnerId == ownerId).ToListAsync();
         }
-        
+
+        public async Task<Result<ChartWeek>> GetLiveWeekFor(User user, DateTime currentTime)
+        {
+            var timezone = TZConvert.GetTimeZoneInfo(user.IanaTimezone ?? "");
+            if (timezone == null)
+            {
+                throw new InvalidOperationException();
+            }
+            
+            var lastUserWeek = await _context.ChartWeeks
+                .Where(week => week.OwnerId == user.Id)
+                .OrderByDescending(week => week.WeekNumber)
+                .FirstOrDefaultAsync();
+
+            var fromDate = lastUserWeek?.To.AddSeconds(1) ?? user.RegisteredAt;
+            var latestWeek = _chartDateService
+                .GetChartWeeksInDateRange(lastUserWeek?.WeekNumber ?? 0,
+                    fromDate, currentTime, timezone, true)
+                .LastOrDefault();
+
+            var fromUnix = ToUnixTimeSeconds(latestWeek.From);
+            var toUnix = ToUnixTimeSeconds(latestWeek.To);
+
+            var artistChart = _lastFm.GetWeeklyArtistChart(user.UserName, fromUnix, toUnix);
+            var albumChart = _lastFm.GetWeeklyAlbumChart(user.UserName, fromUnix, toUnix);
+            var trackChart = _lastFm.GetWeeklyTrackChart(user.UserName, fromUnix, toUnix);
+
+            await Task.WhenAll(artistChart, albumChart, trackChart);
+
+            var mergedResult =
+                Results.Merge(artistChart.Result, albumChart.Result, trackChart.Result);
+            if (mergedResult.IsFailed)
+            {
+                return mergedResult;
+            }
+
+            var previousWeeks = await QuerySavedWeeksWithRelationships(user.Id);
+            var liveWeek = new ChartWeek { Owner = user };
+            liveWeek.ChartEntries = await CreateEntriesForLastFmCharts(trackChart.Result.Value, albumChart.Result.Value,
+                artistChart.Result.Value, liveWeek);
+            
+            liveWeek.ChartEntries.ForEach(entry =>
+            {
+                var (stat, statText) = GetStatsForChartEntry(entry, previousWeeks);
+                entry.Stat = stat;
+                entry.StatText = statText;
+            });
+
+            return Results.Ok(liveWeek);
+        }
+
         public async Task<Result<List<ChartWeek>>> SyncWeeks(
             User user,
             int startWeekNumber,
@@ -62,22 +113,22 @@ namespace ThreeChartsAPI.Features.Charts
             var trackChartTasks = newWeeks
                 .Select(week => _lastFm.GetWeeklyTrackChart(
                     user.UserName,
-                    new DateTimeOffset(week.From).ToUnixTimeSeconds(),
-                    new DateTimeOffset(week.To).ToUnixTimeSeconds()))
+                    ToUnixTimeSeconds(week.From),
+                    ToUnixTimeSeconds(week.To)))
                 .ToList();
 
             var albumChartTasks = newWeeks
                 .Select(week => _lastFm.GetWeeklyAlbumChart(
                     user.UserName,
-                    new DateTimeOffset(week.From).ToUnixTimeSeconds(),
-                    new DateTimeOffset(week.To).ToUnixTimeSeconds()))
+                    ToUnixTimeSeconds(week.From),
+                    ToUnixTimeSeconds(week.To)))
                 .ToList();
 
             var artistChartTasks = newWeeks
                 .Select(week => _lastFm.GetWeeklyArtistChart(
                     user.UserName,
-                    new DateTimeOffset(week.From).ToUnixTimeSeconds(),
-                    new DateTimeOffset(week.To).ToUnixTimeSeconds()))
+                    ToUnixTimeSeconds(week.From),
+                    ToUnixTimeSeconds(week.To)))
                 .ToList();
 
             await Task.WhenAll(trackChartTasks);
@@ -116,17 +167,7 @@ namespace ThreeChartsAPI.Features.Charts
 
             var entries = newWeeks.SelectMany(week => week.ChartEntries).ToList();
 
-            var savedWeeks = await _context.ChartWeeks
-                .Where(week => week.OwnerId == user.Id)
-                .OrderByDescending(week => week.WeekNumber)
-                .Include(week => week.ChartEntries)
-                    .ThenInclude(entry => entry.Track)
-                .Include(week => week.ChartEntries)
-                    .ThenInclude(entry => entry.Album)
-                .Include(week => week.ChartEntries)
-                    .ThenInclude(entry => entry.Artist)
-                .ToListAsync();
-
+            var savedWeeks = await QuerySavedWeeksWithRelationships(user.Id);
             var allWeeks = savedWeeks.Concat(newWeeks).ToList();
 
             entries.ForEach(entry =>
@@ -263,6 +304,21 @@ namespace ThreeChartsAPI.Features.Charts
             return (stat: ChartEntryStat.New, statText: null);
         }
 
+        private long ToUnixTimeSeconds(DateTime dateTime) =>
+            new DateTimeOffset(dateTime).ToUnixTimeSeconds();
+
+        private Task<List<ChartWeek>> QuerySavedWeeksWithRelationships(int ownerId) => _context
+            .ChartWeeks
+            .Where(week => week.OwnerId == ownerId)
+            .OrderByDescending(week => week.WeekNumber)
+            .Include(week => week.ChartEntries)
+                .ThenInclude(entry => entry.Track)
+            .Include(week => week.ChartEntries)
+                .ThenInclude(entry => entry.Album)
+            .Include(week => week.ChartEntries)
+                .ThenInclude(entry => entry.Artist)
+            .ToListAsync(); 
+        
         // TODO: Move to generic DbSet extension
         private async Task<Track> GetTrackOrCreate(string artist, string title)
         {

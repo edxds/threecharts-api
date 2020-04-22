@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using ThreeChartsAPI.Features.Charts;
 using ThreeChartsAPI.Features.Charts.Models;
 using ThreeChartsAPI.Features.LastFm.Models;
@@ -157,6 +158,40 @@ namespace ThreeChartsAPI.Tests
                     (ChartEntryStat.Decrease, "-1"),
                 }
             );
+        }
+
+        [Fact]
+        public async Task GetLiveWeeksFor_WithRecentlyRegisteredUser_ShouldCallLastFmCorrectly()
+        {
+            // Arrange
+            var context = FakeThreeChartsContext.BuildInMemoryContext();
+            var lastFmMock = new FakeLastFmService();
+            var chartDateService = new ChartDateService(context);
+            var service = new ChartService(context, chartDateService, lastFmMock.Object);
+            
+            var userRegisterDate = new DateTime(2020, 4, 21);
+            var endDate = new DateTime(2020, 4, 23, 23, 59, 59);
+            var now = new DateTime(2020, 4, 22);
+            
+            var user = new User
+            {
+                UserName = "edxds",
+                IanaTimezone = "America/Sao_Paulo",
+                RegisteredAt = userRegisterDate,
+            };
+
+            await context.Users.AddAsync(user);
+            await context.SaveChangesAsync();
+            
+            // Act
+            await service.GetLiveWeekFor(user, now);
+            
+            // Assert
+            lastFmMock.Fake
+                .Verify(lfm => lfm.GetWeeklyTrackChart(
+                    It.Is<string>(s => s == "edxds"),
+                    It.Is<long>(l => l == new DateTimeOffset(userRegisterDate).ToUnixTimeSeconds()),
+                    It.Is<long>(l => l == new DateTimeOffset(endDate).ToUnixTimeSeconds())));
         }
         
         [Fact]

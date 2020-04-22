@@ -14,6 +14,8 @@ namespace ThreeChartsAPI.Features.Charts
         
         Task<List<ChartWeek>> GetUserChartWeeks(int ownerId);
 
+        Task<Result<ChartWeek>> GetLiveWeekFor(User user, DateTime currentTime);
+
         Task<Result<List<ChartWeek>>> SyncWeeks(
             User user,
             int startWeekNumber,
