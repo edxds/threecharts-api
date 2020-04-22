@@ -30,21 +30,24 @@ namespace ThreeChartsAPI.Tests
                     {
                         Entries = Tracks
                     }
-                ));
+                ))
+                .Verifiable();
 
             Fake
                 .Setup(s =>
                     s.GetWeeklyAlbumChart(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>()))
                 .ReturnsAsync(Results.Ok(
                     new LastFmChart<LastFmChartAlbum> { Entries = Albums })
-                );
+                )
+                .Verifiable();
 
             Fake
                 .Setup(s =>
                     s.GetWeeklyArtistChart(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>()))
                 .ReturnsAsync(Results.Ok(
                     new LastFmChart<LastFmChartArtist> { Entries = Artists })
-                );
+                )
+                .Verifiable();
         }
     }
 }
