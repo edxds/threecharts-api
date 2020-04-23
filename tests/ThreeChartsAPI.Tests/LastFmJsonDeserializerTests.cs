@@ -3,6 +3,8 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using Moq;
 using ThreeChartsAPI.Features.LastFm;
 using ThreeChartsAPI.Features.LastFm.Models;
 using Xunit;
@@ -15,7 +17,7 @@ namespace ThreeChartsAPI.Tests
         public async Task DeserializeAlbumChart_WithValidJson_ReturnsCorrectObject()
         {
             // Arrange
-            var deserializer = new LastFmJsonDeserializer();
+            var deserializer = MakeDeserializer();
             var jsonStream = MakeJsonStreamFrom(LastFmJsonDeserializerData.WeeklyAlbumChartJson);
 
             // Act
@@ -55,7 +57,7 @@ namespace ThreeChartsAPI.Tests
         public async Task DeserializeArtistChart_WithValidJson_ReturnsCorrectObject()
         {
             // Arrange
-            var deserializer = new LastFmJsonDeserializer();
+            var deserializer = MakeDeserializer();
             var jsonStream = MakeJsonStreamFrom(LastFmJsonDeserializerData.WeeklyArtistChartJson);
             
             // Act
@@ -93,7 +95,7 @@ namespace ThreeChartsAPI.Tests
         public async Task DeserializeTrackChart_WithValidJson_ReturnsCorrectObject()
         {
             // Arrange
-            var deserializer = new LastFmJsonDeserializer();
+            var deserializer = MakeDeserializer();
             var jsonStream = MakeJsonStreamFrom(LastFmJsonDeserializerData.WeeklyTrackChartJson);
 
             // Act
@@ -133,7 +135,7 @@ namespace ThreeChartsAPI.Tests
         public async Task DeserializeSession_WithValidJson_ReturnsCorrectSession()
         {
             // Arrange
-            var deserializer = new LastFmJsonDeserializer();
+            var deserializer = MakeDeserializer();
             var jsonStream = MakeJsonStreamFrom(LastFmJsonDeserializerData.SessionJson);
 
             // Act
@@ -153,7 +155,7 @@ namespace ThreeChartsAPI.Tests
         public async Task DeserializeUserInfo_WithValidJson_ReturnsCorrectUserInfo()
         {
             // Arrange
-            var deserializer = new LastFmJsonDeserializer();
+            var deserializer = MakeDeserializer();
             var jsonStream = MakeJsonStreamFrom(LastFmJsonDeserializerData.UserInfoJson);
 
             // Act
@@ -170,6 +172,11 @@ namespace ThreeChartsAPI.Tests
             };
             
             actualUserInfo.Should().BeEquivalentTo(expectedUserInfo);
+        }
+
+        private LastFmJsonDeserializer MakeDeserializer()
+        {
+            return new LastFmJsonDeserializer(Mock.Of<ILogger<LastFmJsonDeserializer>>());
         }
         
         private Stream MakeJsonStreamFrom(string fromValue)

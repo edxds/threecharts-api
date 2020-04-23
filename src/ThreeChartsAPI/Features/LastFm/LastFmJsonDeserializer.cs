@@ -1,30 +1,46 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using ThreeChartsAPI.Features.LastFm.Models;
 
 namespace ThreeChartsAPI.Features.LastFm
 {
     public class LastFmJsonDeserializer : ILastFmDeserializer
     {
+        private readonly ILogger<LastFmJsonDeserializer> _logger;
+
+        public LastFmJsonDeserializer(ILogger<LastFmJsonDeserializer> logger)
+        {
+            _logger = logger;
+        }
+        
         public async Task<LastFmError> DeserializeError(Stream json)
         {
-            using (var document = await JsonDocument.ParseAsync(json))
+            try
             {
+                using var document = await JsonDocument.ParseAsync(json);
                 return new LastFmError()
                 {
                     ErrorCode = document.RootElement.GetProperty("error").GetInt32(),
                     Message = document.RootElement.GetProperty("message").GetString(),
                 };
             }
+            catch (Exception)
+            {
+                _logger.LogError($"Offending JSON: {json}");
+                throw;
+            }
         }
 
         public async Task<LastFmSession> DeserializeSession(Stream json)
         {
-            using (var document = await JsonDocument.ParseAsync(json))
+            try
             {
+                using var document = await JsonDocument.ParseAsync(json);
                 var session = document.RootElement.GetProperty("session");
 
                 return new LastFmSession()
@@ -33,15 +49,22 @@ namespace ThreeChartsAPI.Features.LastFm
                     Key = session.GetProperty("key").GetString(),
                 };
             }
+            catch (Exception)
+            {
+                _logger.LogError($"Offending JSON: {json}");
+                throw;
+            }
         }
 
         public async Task<LastFmUserInfo> DeserializeUserInfo(Stream json)
         {
-            using (var document = await JsonDocument.ParseAsync(json))
+            try
             {
+                using var document = await JsonDocument.ParseAsync(json);
                 var user = document.RootElement.GetProperty("user");
                 var images = user.GetProperty("image").EnumerateArray();
-                var registerDate = user.GetProperty("registered").GetProperty("unixtime").GetString();
+                var registerDate =
+                    user.GetProperty("registered").GetProperty("unixtime").GetString();
 
                 return new LastFmUserInfo()
                 {
@@ -52,12 +75,18 @@ namespace ThreeChartsAPI.Features.LastFm
                     RealName = user.GetProperty("realname").GetString(),
                 };
             }
+            catch (Exception)
+            {
+                _logger.LogError($"Offending JSON: {json}");
+                throw;
+            }
         }
 
         public async Task<LastFmChart<LastFmChartTrack>> DeserializeTrackChart(Stream json)
         {
-            using (var jsonDocument = await JsonDocument.ParseAsync(json))
+            try
             {
+                using var jsonDocument = await JsonDocument.ParseAsync(json);
                 var chartRoot = jsonDocument.RootElement.GetProperty("weeklytrackchart");
                 return new LastFmChart<LastFmChartTrack>()
                 {
@@ -75,20 +104,26 @@ namespace ThreeChartsAPI.Features.LastFm
                         }).ToList()
                 };
             }
+            catch (Exception)
+            {
+                _logger.LogError($"Offending JSON: {json}");
+                throw;
+            }
         }
 
         public async Task<LastFmChart<LastFmChartAlbum>> DeserializeAlbumChart(Stream json)
         {
-            using (var jsonDocument = await JsonDocument.ParseAsync(json))
+            try
             {
+                using var jsonDocument = await JsonDocument.ParseAsync(json);
                 var chartRoot = jsonDocument.RootElement.GetProperty("weeklyalbumchart");
-                return new LastFmChart<LastFmChartAlbum>()
+                return new LastFmChart<LastFmChartAlbum>
                 {
                     User = GetUserFromChartRoot(chartRoot),
                     From = GetFromDateFromChartRoot(chartRoot),
                     To = GetToDateFromChartRoot(chartRoot),
                     Entries = chartRoot.GetProperty("album").EnumerateArray().Select(album =>
-                        new LastFmChartAlbum()
+                        new LastFmChartAlbum
                         {
                             Url = GetUrlFromLastFmChartItem(album),
                             Artist = GetArtistFromLastFmChartItem(album),
@@ -98,12 +133,18 @@ namespace ThreeChartsAPI.Features.LastFm
                         }).ToList()
                 };
             }
+            catch (Exception)
+            {
+                _logger.LogError($"Offending JSON: {json}");
+                throw;
+            }
         }
 
         public async Task<LastFmChart<LastFmChartArtist>> DeserializeArtistChart(Stream json)
         {
-            using (var jsonDocument = await JsonDocument.ParseAsync(json))
+            try
             {
+                using var jsonDocument = await JsonDocument.ParseAsync(json);
                 var chartRoot = jsonDocument.RootElement.GetProperty("weeklyartistchart");
                 return new LastFmChart<LastFmChartArtist>()
                 {
@@ -119,6 +160,11 @@ namespace ThreeChartsAPI.Features.LastFm
                             PlayCount = GetPlayCountFromLastFmChartItem(artist)
                         }).ToList()
                 };
+            }
+            catch (Exception)
+            {
+                _logger.LogError($"Offending JSON: {json}");
+                throw;
             }
         }
 
