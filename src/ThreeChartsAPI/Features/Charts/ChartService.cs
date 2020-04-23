@@ -65,7 +65,8 @@ namespace ThreeChartsAPI.Features.Charts
             liveWeek.Owner = user;
             liveWeek.ChartEntries = await CreateEntriesForLastFmCharts(trackChart.Result.Value, albumChart.Result.Value,
                 artistChart.Result.Value, liveWeek);
-            
+
+            await _repo.AddMusicalEntitiesFromWeekAndSaveChanges(liveWeek);
             var existingWeeks = await _repo.QueryWeeksWithRelationsOf(user.Id)
                 .ToListAsync();
             
