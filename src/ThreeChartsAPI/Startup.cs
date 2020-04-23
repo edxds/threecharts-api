@@ -20,12 +20,14 @@ namespace ThreeChartsAPI
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, IWebHostEnvironment environment)
         {
             Configuration = configuration;
+            Environment = environment;
         }
 
         public IConfiguration Configuration { get; }
+        public IWebHostEnvironment Environment { get; }
 
         public void ConfigureServices(IServiceCollection services)
         {
@@ -33,7 +35,15 @@ namespace ThreeChartsAPI
             {
                 options.AddDefaultPolicy(builder =>
                 {
-                    builder.SetIsOriginAllowed(_ => true);
+                    if (Environment.IsDevelopment())
+                    {
+                        builder.SetIsOriginAllowed(_ => true);
+                    }
+                    else
+                    {
+                        builder.WithOrigins("https://threecharts.edxds.co");
+                    }
+
                     builder.AllowCredentials()
                         .AllowAnyHeader()
                         .AllowAnyMethod();
@@ -108,7 +118,7 @@ namespace ThreeChartsAPI
 
             app.UseCookiePolicy(new CookiePolicyOptions()
             {
-                MinimumSameSitePolicy = SameSiteMode.None,
+                MinimumSameSitePolicy = env.IsDevelopment() ? SameSiteMode.None : SameSiteMode.Lax,
             });
 
             app.UseCors();
