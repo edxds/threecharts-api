@@ -41,13 +41,13 @@ namespace ThreeChartsAPI.Features.Charts
                 .FirstOrDefaultAsync();
 
             var fromDate = lastUserWeek?.To.AddSeconds(1) ?? user.RegisteredAt;
-            var latestWeek = _chartDateService
-                .GetChartWeeksInDateRange(lastUserWeek?.WeekNumber ?? 0,
+            var liveWeek = _chartDateService
+                .GetChartWeeksInDateRange(lastUserWeek?.WeekNumber ?? 1,
                     fromDate, currentTime, timezone, true)
                 .LastOrDefault();
 
-            var fromUnix = ToUnixTimeSeconds(latestWeek.From);
-            var toUnix = ToUnixTimeSeconds(latestWeek.To);
+            var fromUnix = ToUnixTimeSeconds(liveWeek.From);
+            var toUnix = ToUnixTimeSeconds(liveWeek.To);
 
             var artistChart = _lastFm.GetWeeklyArtistChart(user.UserName, fromUnix, toUnix);
             var albumChart = _lastFm.GetWeeklyAlbumChart(user.UserName, fromUnix, toUnix);
@@ -62,7 +62,7 @@ namespace ThreeChartsAPI.Features.Charts
                 return mergedResult;
             }
 
-            var liveWeek = new ChartWeek { Owner = user };
+            liveWeek.Owner = user;
             liveWeek.ChartEntries = await CreateEntriesForLastFmCharts(trackChart.Result.Value, albumChart.Result.Value,
                 artistChart.Result.Value, liveWeek);
             
