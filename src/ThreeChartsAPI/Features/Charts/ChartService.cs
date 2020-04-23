@@ -42,7 +42,7 @@ namespace ThreeChartsAPI.Features.Charts
 
             var fromDate = lastUserWeek?.To.AddSeconds(1) ?? user.RegisteredAt;
             var liveWeek = _chartDateService
-                .GetChartWeeksInDateRange(lastUserWeek?.WeekNumber ?? 1,
+                .GetChartWeeksInDateRange(lastUserWeek?.WeekNumber + 1 ?? 1,
                     fromDate, currentTime, timezone, true)
                 .LastOrDefault();
 
