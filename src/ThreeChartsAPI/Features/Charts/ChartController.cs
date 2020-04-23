@@ -2,6 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using ThreeChartsAPI.Features.Charts.Dtos;
 using ThreeChartsAPI.Features.Charts.Models;
 using ThreeChartsAPI.Features.Users.Dtos;
@@ -13,36 +14,39 @@ namespace ThreeChartsAPI.Features.Charts
     [Route("api/charts")]
     public class ChartController : ControllerBase
     {
-        private readonly IChartService _chartService;
+        private readonly ChartRepository _repo;
 
-        public ChartController(IChartService chartService)
+        public ChartController(ChartRepository repo)
         {
-            _chartService = chartService;
+            _repo = repo;
         }
 
         [HttpGet("weeks/{ownerId}")]
         public async Task<ActionResult<UserWeeksDto>> GetWeeks(int ownerId)
         {
-            var weeks = await _chartService.GetUserChartWeeks(ownerId);
-            var weekDtos = weeks
+            var weeks = await _repo.QueryWeeksOf(ownerId)
                 .OrderBy(week => week.WeekNumber)
-                .Select(week => new UserWeekDto()
-                {
-                    Id = week.Id,
-                    OwnerId = week.OwnerId,
-                    WeekNumber = week.WeekNumber,
-                    From = week.From,
-                    To = week.To
-                })
-                .ToList();
+                .Select(
+                    week => new UserWeekDto()
+                    {
+                        Id = week.Id,
+                        OwnerId = week.OwnerId,
+                        WeekNumber = week.WeekNumber,
+                        From = week.From,
+                        To = week.To
+                    })
+                .ToListAsync();
 
-            return Ok(new UserWeeksDto() { Weeks = weekDtos });
+            return Ok(new UserWeeksDto { Weeks = weeks });
         }
 
         [HttpGet("weeks/{ownerId}/{weekId}")]
         public async Task<ActionResult<ChartsDto>> GetUserCharts(int ownerId, int weekId)
         {
-            var week = await _chartService.GetChartWeek(ownerId, weekId);
+            var week = await _repo
+                .QueryWeeksWithRelationsOf(ownerId)
+                .FirstOrDefaultAsync(w => w.Id == weekId);
+            
             if (week == null)
             {
                 return NotFound();

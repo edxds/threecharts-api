@@ -14,36 +14,18 @@ namespace ThreeChartsAPI.Features.Charts
 {
     public class ChartService : IChartService
     {
-        private readonly ThreeChartsContext _context;
+        private readonly ChartRepository _repo;
         private readonly IChartDateService _chartDateService;
         private readonly ILastFmService _lastFm;
 
         public ChartService(
-            ThreeChartsContext context,
+            ChartRepository repo,
             IChartDateService chartDateService,
             ILastFmService lastFmService)
         {
-            _context = context;
+            _repo = repo;
             _chartDateService = chartDateService;
             _lastFm = lastFmService;
-        }
-
-        public Task<ChartWeek> GetChartWeek(int ownerId, int weekId)
-        {
-            return _context.ChartWeeks
-                .Include(week => week.ChartEntries)
-                    .ThenInclude(entry => entry.Artist)
-                .Include(week => week.ChartEntries)
-                    .ThenInclude(entry => entry.Album)
-                .Include(week => week.ChartEntries)
-                    .ThenInclude(entry => entry.Track)
-                .Where(week => week.OwnerId == ownerId && week.Id == weekId)
-                .FirstOrDefaultAsync();
-        }
-        
-        public Task<List<ChartWeek>> GetUserChartWeeks(int ownerId)
-        {
-            return _context.ChartWeeks.Where(week => week.OwnerId == ownerId).ToListAsync();
         }
 
         public async Task<Result<ChartWeek>> GetLiveWeekFor(User user, DateTime currentTime)
@@ -53,9 +35,8 @@ namespace ThreeChartsAPI.Features.Charts
             {
                 throw new InvalidOperationException();
             }
-            
-            var lastUserWeek = await _context.ChartWeeks
-                .Where(week => week.OwnerId == user.Id)
+
+            var lastUserWeek = await _repo.QueryWeeksOf(user.Id)
                 .OrderByDescending(week => week.WeekNumber)
                 .FirstOrDefaultAsync();
 
@@ -81,14 +62,16 @@ namespace ThreeChartsAPI.Features.Charts
                 return mergedResult;
             }
 
-            var previousWeeks = await QuerySavedWeeksWithRelationships(user.Id);
             var liveWeek = new ChartWeek { Owner = user };
             liveWeek.ChartEntries = await CreateEntriesForLastFmCharts(trackChart.Result.Value, albumChart.Result.Value,
                 artistChart.Result.Value, liveWeek);
             
+            var existingWeeks = await _repo.QueryWeeksWithRelationsOf(user.Id)
+                .ToListAsync();
+            
             liveWeek.ChartEntries.ForEach(entry =>
             {
-                var (stat, statText) = GetStatsForChartEntry(entry, previousWeeks);
+                var (stat, statText) = GetStatsForChartEntry(entry, existingWeeks);
                 entry.Stat = stat;
                 entry.StatText = statText;
             });
@@ -167,8 +150,8 @@ namespace ThreeChartsAPI.Features.Charts
 
             var entries = newWeeks.SelectMany(week => week.ChartEntries).ToList();
 
-            var savedWeeks = await QuerySavedWeeksWithRelationships(user.Id);
-            var allWeeks = savedWeeks.Concat(newWeeks).ToList();
+            var existingWeeks = await _repo.QueryWeeksWithRelationsOf(user.Id).ToListAsync();
+            var allWeeks = existingWeeks.Concat(newWeeks).ToList();
 
             entries.ForEach(entry =>
             {
@@ -177,9 +160,7 @@ namespace ThreeChartsAPI.Features.Charts
                 entry.StatText = statText;
             });
 
-            await _context.ChartWeeks.AddRangeAsync(newWeeks);
-            await _context.SaveChangesAsync();
-
+            await _repo.AddWeeksAndSaveChanges(newWeeks);
             return Results.Ok(allWeeks);
         }
         
@@ -195,7 +176,7 @@ namespace ThreeChartsAPI.Features.Charts
             {
                 if (entry.Rank > 100) continue;
                 
-                var track = await GetTrackOrCreate(entry.Artist, entry.Title);
+                var track = await _repo.GetTrackOrCreate(entry.Artist, entry.Title);
                 entries.Add(new ChartEntry()
                 {
                     Week = targetWeek,
@@ -209,7 +190,7 @@ namespace ThreeChartsAPI.Features.Charts
             {
                 if (entry.Rank > 100) continue;
                 
-                var album = await GetAlbumOrCreate(entry.Artist, entry.Title);
+                var album = await _repo.GetAlbumOrCreate(entry.Artist, entry.Title);
                 entries.Add(new ChartEntry()
                 {
                     Week = targetWeek,
@@ -223,7 +204,7 @@ namespace ThreeChartsAPI.Features.Charts
             {
                 if (entry.Rank > 100) continue;
                 
-                var artist = await GetArtistOrCreate(entry.Name);
+                var artist = await _repo.GetArtistOrCreate(entry.Name);
                 entries.Add(new ChartEntry()
                 {
                     Week = targetWeek,
@@ -306,67 +287,5 @@ namespace ThreeChartsAPI.Features.Charts
 
         private long ToUnixTimeSeconds(DateTime dateTime) =>
             new DateTimeOffset(dateTime).ToUnixTimeSeconds();
-
-        private Task<List<ChartWeek>> QuerySavedWeeksWithRelationships(int ownerId) => _context
-            .ChartWeeks
-            .Where(week => week.OwnerId == ownerId)
-            .OrderByDescending(week => week.WeekNumber)
-            .Include(week => week.ChartEntries)
-                .ThenInclude(entry => entry.Track)
-            .Include(week => week.ChartEntries)
-                .ThenInclude(entry => entry.Album)
-            .Include(week => week.ChartEntries)
-                .ThenInclude(entry => entry.Artist)
-            .ToListAsync(); 
-        
-        // TODO: Move to generic DbSet extension
-        private async Task<Track> GetTrackOrCreate(string artist, string title)
-        {
-            var track = await _context.Tracks
-                .FirstOrDefaultAsync(track => track.ArtistName == artist && track.Title == title);
-
-            if (track == null)
-            {
-                track = new Track()
-                {
-                    ArtistName = artist,
-                    Title = title
-                };
-            }
-
-            return track;
-        }
-
-        private async Task<Album> GetAlbumOrCreate(string artist, string title)
-        {
-            var album = await _context.Albums
-                .FirstOrDefaultAsync(album => album.ArtistName == artist && album.Title == title);
-
-            if (album == null)
-            {
-                album = new Album()
-                {
-                    ArtistName = artist,
-                    Title = title
-                };
-            }
-
-            return album;
-        }
-
-        private async Task<Artist> GetArtistOrCreate(string name)
-        {
-            var artist = await _context.Artists.FirstOrDefaultAsync(artist => artist.Name == name);
-
-            if (artist == null)
-            {
-                artist = new Artist()
-                {
-                    Name = name,
-                };
-            }
-
-            return artist;
-        }
     }
 }

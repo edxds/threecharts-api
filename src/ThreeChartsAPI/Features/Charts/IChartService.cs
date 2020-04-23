@@ -10,10 +10,6 @@ namespace ThreeChartsAPI.Features.Charts
 {
     public interface IChartService
     {
-        Task<ChartWeek> GetChartWeek(int ownerId, int weekId);
-        
-        Task<List<ChartWeek>> GetUserChartWeeks(int ownerId);
-
         Task<Result<ChartWeek>> GetLiveWeekFor(User user, DateTime currentTime);
 
         Task<Result<List<ChartWeek>>> SyncWeeks(

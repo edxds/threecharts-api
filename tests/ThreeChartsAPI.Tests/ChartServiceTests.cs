@@ -34,8 +34,8 @@ namespace ThreeChartsAPI.Tests
 
             var context = FakeThreeChartsContext.BuildInMemoryContext();
             var chartDateService = new ChartDateService(context);
-
-            var chartService = new ChartService(context, chartDateService, lastFmFake.Object);
+            var repo = new ChartRepository(context);
+            var chartService = new ChartService(repo, chartDateService, lastFmFake.Object);
 
             // Act
             // Save two chart entries that have identical track
@@ -98,8 +98,8 @@ namespace ThreeChartsAPI.Tests
 
             var context = FakeThreeChartsContext.BuildInMemoryContext();
             var chartDateService = new ChartDateService(context);
-            
-            var chartService = new ChartService(context, chartDateService, lastFmStub);
+            var repo = new ChartRepository(context);
+            var chartService = new ChartService(repo, chartDateService, lastFmStub);
 
             // Act
             var weeks = new List<ChartWeek>();
@@ -165,9 +165,10 @@ namespace ThreeChartsAPI.Tests
         {
             // Arrange
             var context = FakeThreeChartsContext.BuildInMemoryContext();
+            var repo = new ChartRepository(context);
             var lastFmMock = new FakeLastFmService();
             var chartDateService = new ChartDateService(context);
-            var service = new ChartService(context, chartDateService, lastFmMock.Object);
+            var service = new ChartService(repo, chartDateService, lastFmMock.Object);
             
             var userRegisterDate = new DateTime(2020, 4, 21);
             var endDate = new DateTime(2020, 4, 23, 23, 59, 59);
@@ -213,7 +214,8 @@ namespace ThreeChartsAPI.Tests
             };
 
             lastFmFake.SetupFake();
-            var service = new ChartService(context, chartDateService, lastFmStub);
+            var repo = new ChartRepository(context);
+            var service = new ChartService(repo, chartDateService, lastFmStub);
 
             var userRegisterDate = new DateTime(2020, 3, 6);
             var nowDate = new DateTime(2020, 3, 13);

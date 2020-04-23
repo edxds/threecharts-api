@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using ThreeChartsAPI.Features.Charts;
 using ThreeChartsAPI.Features.LastFm;
 using ThreeChartsAPI.Features.LastFm.Dtos;
@@ -18,17 +19,20 @@ namespace ThreeChartsAPI.Features.Users
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly ChartRepository _chartRepository;
         private readonly IChartService _chartService;
         private readonly IChartDateService _chartDateService;
         private readonly ILastFmService _lastFm;
 
         public UserController(
             IUserService userService,
+            ChartRepository chartRepository,
             IChartService chartService,
             IChartDateService chartDateService,
             ILastFmService lastFmService)
         {
             _userService = userService;
+            _chartRepository = chartRepository;
             _chartService = chartService;
             _chartDateService = chartDateService;
             _lastFm = lastFmService;
@@ -131,15 +135,18 @@ namespace ThreeChartsAPI.Features.Users
             {
                 return BadRequest();
             }
-
-            var weeks = await _chartService.GetUserChartWeeks(user.Id);
+            
             var syncStartDate = user.RegisteredAt;
             var startWeekNumber = 1;
-            if (weeks.Count > 0)
+            
+            var latestWeek = await _chartRepository.QueryWeeksOf(user.Id)
+                .OrderByDescending(w => w.WeekNumber)
+                .FirstOrDefaultAsync();
+            
+            if (latestWeek != null)
             {
-                var lastestWeek = weeks.OrderByDescending(week => week.WeekNumber).First();
-                syncStartDate = lastestWeek.To.AddSeconds(1);
-                startWeekNumber = lastestWeek.WeekNumber + 1;
+                syncStartDate = latestWeek.To.AddSeconds(1);
+                startWeekNumber = latestWeek.WeekNumber + 1;
             }
 
             var userTimeZone = TZConvert.GetTimeZoneInfo(user.IanaTimezone);
