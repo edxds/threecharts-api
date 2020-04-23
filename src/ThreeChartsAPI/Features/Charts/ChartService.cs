@@ -53,7 +53,10 @@ namespace ThreeChartsAPI.Features.Charts
             var albumChart = _lastFm.GetWeeklyAlbumChart(user.UserName, fromUnix, toUnix);
             var trackChart = _lastFm.GetWeeklyTrackChart(user.UserName, fromUnix, toUnix);
 
-            await Task.WhenAll(artistChart, albumChart, trackChart);
+            // Allows for parallel running since Tasks are started at call, not at await
+            await artistChart;
+            await albumChart;
+            await trackChart;
 
             var mergedResult =
                 Results.Merge(artistChart.Result, albumChart.Result, trackChart.Result);
