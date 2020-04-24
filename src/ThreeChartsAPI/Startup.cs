@@ -1,4 +1,5 @@
 using System;
+using System.Net.Http;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using EFCore.NamingConventions;
@@ -62,10 +63,10 @@ namespace ThreeChartsAPI
                 options.UseSnakeCaseNamingConvention();
             });
 
-            services.AddHttpClient("lastFm", c =>
-            {
-                c.BaseAddress = new Uri("http://ws.audioscrobbler.com/2.0/");
-            });
+            services.AddHttpClient("lastFm",
+                    c => { c.BaseAddress = new Uri("http://ws.audioscrobbler.com/2.0/"); })
+                .ConfigurePrimaryHttpMessageHandler(() =>
+                    new RetryHandler(new HttpClientHandler()));
 
             // LastFm service registration
             services.AddSingleton(
