@@ -96,36 +96,49 @@ namespace ThreeChartsAPI.Features.Charts
                 endDate ?? DateTime.UtcNow,
                 timeZone
             );
+            
+            var newWeekChunks = ChunkBy(newWeeks, 50);
 
-            var trackChartTasks = newWeeks
-                .Select(week => _lastFm.GetWeeklyTrackChart(
-                    user.UserName,
-                    ToUnixTimeSeconds(week.From),
-                    ToUnixTimeSeconds(week.To)))
-                .ToList();
+            var trackChartResults = new List<Result<LastFmChart<LastFmChartTrack>>>();
+            var albumChartResults = new List<Result<LastFmChart<LastFmChartAlbum>>>();
+            var artistChartResults = new List<Result<LastFmChart<LastFmChartArtist>>>();
+            
+            foreach (var weekChunk in newWeekChunks)
+            {
+                var trackChartTasks = weekChunk
+                    .Select(week => _lastFm.GetWeeklyTrackChart(
+                        user.UserName,
+                        ToUnixTimeSeconds(week.From),
+                        ToUnixTimeSeconds(week.To)))
+                    .ToList();
+                
+                var albumChartTasks = weekChunk
+                    .Select(week => _lastFm.GetWeeklyAlbumChart(
+                        user.UserName,
+                        ToUnixTimeSeconds(week.From),
+                        ToUnixTimeSeconds(week.To)))
+                    .ToList();
+                
+                var artistChartTasks = weekChunk
+                    .Select(week => _lastFm.GetWeeklyArtistChart(
+                        user.UserName,
+                        ToUnixTimeSeconds(week.From),
+                        ToUnixTimeSeconds(week.To)))
+                    .ToList();
+                
+                await Task.WhenAll(trackChartTasks);
+                await Task.WhenAll(albumChartTasks);
+                await Task.WhenAll(artistChartTasks);
+                
+                trackChartResults.AddRange(trackChartTasks.Select(t => t.Result));
+                albumChartResults.AddRange(albumChartTasks.Select(t => t.Result));
+                artistChartResults.AddRange(artistChartTasks.Select(t => t.Result));
+            }
 
-            var albumChartTasks = newWeeks
-                .Select(week => _lastFm.GetWeeklyAlbumChart(
-                    user.UserName,
-                    ToUnixTimeSeconds(week.From),
-                    ToUnixTimeSeconds(week.To)))
-                .ToList();
-
-            var artistChartTasks = newWeeks
-                .Select(week => _lastFm.GetWeeklyArtistChart(
-                    user.UserName,
-                    ToUnixTimeSeconds(week.From),
-                    ToUnixTimeSeconds(week.To)))
-                .ToList();
-
-            await Task.WhenAll(trackChartTasks);
-            await Task.WhenAll(albumChartTasks);
-            await Task.WhenAll(artistChartTasks);
-
-            if (newWeeks.Count != trackChartTasks.Count() ||
-                trackChartTasks.Count() != albumChartTasks.Count() ||
-                trackChartTasks.Count() != artistChartTasks.Count() ||
-                artistChartTasks.Count() != albumChartTasks.Count())
+            if (newWeeks.Count != trackChartResults.Count() ||
+                trackChartResults.Count() != albumChartResults.Count() ||
+                trackChartResults.Count() != artistChartResults.Count() ||
+                artistChartResults.Count() != albumChartResults.Count())
             {
                 throw new InvalidOperationException("Chart counts don't match!");
             }
@@ -133,9 +146,9 @@ namespace ThreeChartsAPI.Features.Charts
             for (int i = 0; i < newWeeks.Count(); i++)
             {
                 var week = newWeeks[i];
-                var trackChart = trackChartTasks[i].Result;
-                var albumChart = albumChartTasks[i].Result;
-                var artistChart = artistChartTasks[i].Result;
+                var trackChart = trackChartResults[i];
+                var albumChart = albumChartResults[i];
+                var artistChart = artistChartResults[i];
 
                 var mergedResults = Results.Merge(trackChart, albumChart, artistChart);
                 if (mergedResults.IsFailed)
@@ -289,6 +302,15 @@ namespace ThreeChartsAPI.Features.Charts
             return (stat: ChartEntryStat.New, statText: null);
         }
 
+        private static List<List<T>> ChunkBy<T>(List<T> source, int chunkSize)
+        {
+            return source
+                .Select((x, i) => new { Index = i, Value = x })
+                .GroupBy(x => x.Index / chunkSize)
+                .Select(x => x.Select(v => v.Value).ToList())
+                .ToList();
+        }
+        
         private long ToUnixTimeSeconds(DateTime dateTime) =>
             new DateTimeOffset(dateTime).ToUnixTimeSeconds();
     }
