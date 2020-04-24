@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ThreeChartsAPI;
@@ -10,9 +11,10 @@ using ThreeChartsAPI.Features.Charts.Models;
 namespace ThreeChartsAPI.Migrations
 {
     [DbContext(typeof(ThreeChartsContext))]
-    partial class ThreeChartsContextModelSnapshot : ModelSnapshot
+    [Migration("20200424174737_RevampChartSystem")]
+    partial class RevampChartSystem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

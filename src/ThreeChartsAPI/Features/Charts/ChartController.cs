@@ -115,44 +115,44 @@ namespace ThreeChartsAPI.Features.Charts
                 TrackEntries = week.ChartEntries
                     .Where(entry => entry.Type == ChartEntryType.Track)
                     .OrderBy(entry => entry.Rank)
-                    .Select(entry => new TrackEntryDto
+                    .Select(entry => new EntryDto
                     {
                         Id = entry.Id,
+                        Type = entry.Type,
                         Rank = entry.Rank,
                         Stat = entry.Stat,
                         StatText = entry.StatText,
-                        TrackId = entry.Track!.Id,
-                        Title = entry.Track!.Title,
-                        ArtistName = entry.Track!.ArtistName,
+                        Title = entry.Title,
+                        Artist = entry.Artist,
                     })
                     .ToList(),
 
                 AlbumEntries = week.ChartEntries
                     .Where(entry => entry.Type == ChartEntryType.Album)
                     .OrderBy(entry => entry.Rank)
-                    .Select(entry => new AlbumEntryDto
+                    .Select(entry => new EntryDto
                     {
                         Id = entry.Id,
+                        Type = entry.Type,
                         Rank = entry.Rank,
                         Stat = entry.Stat,
                         StatText = entry.StatText,
-                        AlbumId = entry.Album!.Id,
-                        Title = entry.Album!.Title,
-                        ArtistName = entry.Album!.ArtistName,
+                        Title = entry.Title,
+                        Artist = entry.Artist,
                     })
                     .ToList(),
 
                 ArtistEntries = week.ChartEntries
                     .Where(entry => entry.Type == ChartEntryType.Artist)
                     .OrderBy(entry => entry.Rank)
-                    .Select(entry => new ArtistEntryDto
+                    .Select(entry => new EntryDto
                     {
                         Id = entry.Id,
+                        Type = entry.Type,
                         Stat = entry.Stat,
                         Rank = entry.Rank,
                         StatText = entry.StatText,
-                        ArtistId = entry.Artist!.Id,
-                        Name = entry.Artist!.Name,
+                        Artist = entry.Artist,
                     })
                     .ToList(),
             };

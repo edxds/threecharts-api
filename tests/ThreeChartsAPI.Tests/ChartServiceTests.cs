@@ -16,55 +16,6 @@ namespace ThreeChartsAPI.Tests
     public class ChartServiceTests
     {
         [Fact]
-        public async Task CreateEntriesForChartWeek_WithIdenticalTracks_ShouldNotCreateRepetition()
-        {
-            // Arrange
-            var user = new User { UserName = "edxds" };
-            var fakeWeek = new ChartWeek // A fake week is needed to parent the chart entries
-            {
-                Owner = user,
-                From = new DateTime(),
-                To = new DateTime()
-            };
-
-            var lastFmFake = new FakeLastFmService();
-            var lastFmStub = lastFmFake.Object;
-            lastFmFake.Tracks.Add(
-                new LastFmChartTrack { Title = "Love Again", Artist = "Dua Lipa" });
-
-            var context = FakeThreeChartsContext.BuildInMemoryContext();
-            var chartDateService = new ChartDateService(context);
-            var repo = new ChartRepository(context);
-            var chartService = new ChartService(repo, chartDateService, lastFmFake.Object);
-
-            // Act
-            // Save two chart entries that have identical track
-            for (var i = 0; i < 2; i++)
-            {
-                var trackChart = await lastFmStub.GetWeeklyTrackChart("", 0, 0);
-                var albumChart = await lastFmStub.GetWeeklyAlbumChart("", 0, 0);
-                var artistChart = await lastFmStub.GetWeeklyArtistChart("", 0, 0);
-
-                fakeWeek.ChartEntries = await chartService.CreateEntriesForLastFmCharts(
-                    trackChart.Value,
-                    albumChart.Value,
-                    artistChart.Value,
-                    fakeWeek
-                );
-            }
-
-            await context.ChartWeeks.AddAsync(fakeWeek);
-            await context.SaveChangesAsync();
-
-            // Assert
-            var savedTracks = await context.Tracks.ToListAsync();
-
-            savedTracks.Should().HaveCount(1);
-            savedTracks[0].Title.Should().Be("Love Again");
-            savedTracks[0].ArtistName.Should().Be("Dua Lipa");
-        }
-        
-        [Fact]
         public async Task GetStatsForChart_WithMultipleTrackEntries_ReturnsCorrectStats()
         {
             // Arrange
@@ -118,7 +69,7 @@ namespace ThreeChartsAPI.Tests
                 var albumChart = await lastFmStub.GetWeeklyAlbumChart("", 0, 0);
                 var artistChart = await lastFmStub.GetWeeklyArtistChart("", 0, 0);
 
-                week.ChartEntries = await chartService.CreateEntriesForLastFmCharts(
+                week.ChartEntries = chartService.CreateEntriesForLastFmCharts(
                     trackChart.Value,
                     albumChart.Value,
                     artistChart.Value,
@@ -250,17 +201,17 @@ namespace ThreeChartsAPI.Tests
                 entry.Stat.Should().Be(ChartEntryStat.New);
             }
 
-            actualWeeks[0].ChartEntries[0].Track!.Title.Should().Be("Cool");
-            actualWeeks[0].ChartEntries[0].Track!.ArtistName.Should().Be("Dua Lipa");
+            actualWeeks[0].ChartEntries[0].Title.Should().Be("Cool");
+            actualWeeks[0].ChartEntries[0].Artist.Should().Be("Dua Lipa");
 
-            actualWeeks[0].ChartEntries[1].Track!.Title.Should().Be("Pretty Please");
-            actualWeeks[0].ChartEntries[1].Track!.ArtistName.Should().Be("Dua Lipa");
+            actualWeeks[0].ChartEntries[1].Title.Should().Be("Pretty Please");
+            actualWeeks[0].ChartEntries[1].Artist.Should().Be("Dua Lipa");
 
-            actualWeeks[0].ChartEntries[2].Track!.Title.Should().Be("Hallucinate");
-            actualWeeks[0].ChartEntries[2].Track!.ArtistName.Should().Be("Dua Lipa");
+            actualWeeks[0].ChartEntries[2].Title.Should().Be("Hallucinate");
+            actualWeeks[0].ChartEntries[2].Artist.Should().Be("Dua Lipa");
 
-            actualWeeks[0].ChartEntries[3].Track!.Title.Should().Be("WANNABE");
-            actualWeeks[0].ChartEntries[3].Track!.ArtistName.Should().Be("ITZY");
+            actualWeeks[0].ChartEntries[3].Title.Should().Be("WANNABE");
+            actualWeeks[0].ChartEntries[3].Artist.Should().Be("ITZY");
         }
     }
 }

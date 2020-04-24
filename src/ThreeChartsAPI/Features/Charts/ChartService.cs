@@ -66,16 +66,18 @@ namespace ThreeChartsAPI.Features.Charts
             }
 
             liveWeek.Owner = user;
-            liveWeek.ChartEntries = await CreateEntriesForLastFmCharts(trackChart.Result.Value, albumChart.Result.Value,
+            liveWeek.ChartEntries = CreateEntriesForLastFmCharts(trackChart.Result.Value,
+                albumChart.Result.Value,
                 artistChart.Result.Value, liveWeek);
 
-            await _repo.AddMusicalEntitiesFromWeekAndSaveChanges(liveWeek);
             var existingWeeks = await _repo.QueryWeeksWithRelationsOf(user.Id)
                 .ToListAsync();
-            
+
+            var entryId = 1;
             liveWeek.ChartEntries.ForEach(entry =>
             {
                 var (stat, statText) = GetStatsForChartEntry(entry, existingWeeks);
+                entry.Id = entryId++;
                 entry.Stat = stat;
                 entry.StatText = statText;
             });
@@ -157,7 +159,7 @@ namespace ThreeChartsAPI.Features.Charts
                 }
 
                 week.Owner = user;
-                week.ChartEntries = await CreateEntriesForLastFmCharts(
+                week.ChartEntries = CreateEntriesForLastFmCharts(
                     trackChart.Value,
                     albumChart.Value,
                     artistChart.Value,
@@ -181,7 +183,7 @@ namespace ThreeChartsAPI.Features.Charts
             return Results.Ok(allWeeks);
         }
         
-        public async Task<List<ChartEntry>> CreateEntriesForLastFmCharts(
+        public List<ChartEntry> CreateEntriesForLastFmCharts(
             LastFmChart<LastFmChartTrack> trackChart,
             LastFmChart<LastFmChartAlbum> albumChart,
             LastFmChart<LastFmChartArtist> artistChart,
@@ -192,49 +194,47 @@ namespace ThreeChartsAPI.Features.Charts
             foreach (var entry in trackChart.Entries)
             {
                 if (entry.Rank > 100) continue;
-                
-                var track = await _repo.GetTrackOrCreate(entry.Artist, entry.Title);
-                entries.Add(new ChartEntry()
+                entries.Add(new ChartEntry
                 {
                     Week = targetWeek,
                     Type = ChartEntryType.Track,
                     Rank = entry.Rank,
-                    Track = track,
+                    Title = entry.Title,
+                    Artist = entry.Artist,
                 });
             }
 
             foreach (var entry in albumChart.Entries)
             {
                 if (entry.Rank > 100) continue;
-                
-                var album = await _repo.GetAlbumOrCreate(entry.Artist, entry.Title);
-                entries.Add(new ChartEntry()
+                entries.Add(new ChartEntry
                 {
                     Week = targetWeek,
                     Type = ChartEntryType.Album,
                     Rank = entry.Rank,
-                    Album = album,
+                    Title = entry.Title,
+                    Artist = entry.Artist,
                 });
             }
 
             foreach (var entry in artistChart.Entries)
             {
                 if (entry.Rank > 100) continue;
-                
-                var artist = await _repo.GetArtistOrCreate(entry.Name);
-                entries.Add(new ChartEntry()
+                entries.Add(new ChartEntry
                 {
                     Week = targetWeek,
                     Type = ChartEntryType.Artist,
                     Rank = entry.Rank,
-                    Artist = artist,
+                    Artist = entry.Name,
                 });
             }
 
             return entries;
         }
 
-        public (ChartEntryStat stat, string? statText) GetStatsForChartEntry(ChartEntry entry, List<ChartWeek> weeks)
+        public (ChartEntryStat stat, string? statText) GetStatsForChartEntry(
+            ChartEntry entry,
+            List<ChartWeek> weeks)
         {
             if (entry.Week.WeekNumber < 1)
             {
@@ -254,51 +254,34 @@ namespace ThreeChartsAPI.Features.Charts
                 return (stat: ChartEntryStat.New, statText: null);
             }
 
-            var entryOnPreviousWeek = previousWeek.ChartEntries
-                .Find(prevEntry =>
-                    (prevEntry.Track?.Title == entry.Track?.Title &&
-                        prevEntry.Track?.ArtistName == entry.Track?.ArtistName) &&
-                    (prevEntry.Album?.Title == entry.Album?.Title &&
-                        prevEntry.Album?.ArtistName == entry.Album?.ArtistName) &&
-                    (prevEntry.Artist?.Name == entry.Artist?.Name));
-
-            if (entryOnPreviousWeek != null)
-            {
-                var currentRank = entry.Rank;
-                var previousRank = entryOnPreviousWeek.Rank;
-
-                var difference = previousRank - currentRank;
-                if (difference == 0)
-                {
-                    return (stat: ChartEntryStat.NoDiff, statText: "=");
-                }
-
-                var isDrop = difference < 0;
-                if (isDrop)
-                {
-                    return (stat: ChartEntryStat.Decrease, statText: $"-{Math.Abs(difference)}");
-                }
-
-                return (stat: ChartEntryStat.Increase, statText: $"+{Math.Abs(difference)}");
-            }
-
-            var previousEntry = weeks
+            var latestEntry = weeks
                 .Where(week => week.WeekNumber < entry.Week.WeekNumber)
                 .SelectMany(week => week.ChartEntries)
-                .ToList()
-                .Find(prevEntry =>
-                    (prevEntry.Track?.Title == entry.Track?.Title &&
-                        prevEntry.Track?.ArtistName == entry.Track?.ArtistName) &&
-                    (prevEntry.Album?.Title == entry.Album?.Title &&
-                        prevEntry.Album?.ArtistName == entry.Album?.ArtistName) &&
-                    (prevEntry.Artist?.Name == entry.Artist?.Name));
+                .OrderBy(e => e.Week.WeekNumber)
+                .LastOrDefault(e =>
+                    e.Type == entry.Type && e.Artist == entry.Artist && e.Title == entry.Title);
 
-            if (previousEntry != null)
-            {
+            if (latestEntry == null) return (stat: ChartEntryStat.New, statText: null);
+            
+            if (latestEntry.Week.WeekNumber != entry.Week.WeekNumber - 1)
                 return (stat: ChartEntryStat.Reentry, statText: null);
+            
+            var currentRank = entry.Rank;
+            var previousRank = latestEntry.Rank;
+
+            var difference = previousRank - currentRank;
+            if (difference == 0)
+            {
+                return (stat: ChartEntryStat.NoDiff, statText: "=");
             }
 
-            return (stat: ChartEntryStat.New, statText: null);
+            var isDrop = difference < 0;
+            if (isDrop)
+            {
+                return (stat: ChartEntryStat.Decrease, statText: $"-{Math.Abs(difference)}");
+            }
+
+            return (stat: ChartEntryStat.Increase, statText: $"+{Math.Abs(difference)}");
         }
 
         private static List<List<T>> ChunkBy<T>(List<T> source, int chunkSize)

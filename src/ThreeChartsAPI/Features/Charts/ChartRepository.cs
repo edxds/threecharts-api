@@ -24,11 +24,6 @@ namespace ThreeChartsAPI.Features.Charts
         {
             return _context.ChartWeeks
                 .Include(week => week.ChartEntries)
-                    .ThenInclude(entry => entry.Artist)
-                .Include(week => week.ChartEntries)
-                    .ThenInclude(entry => entry.Album)
-                .Include(week => week.ChartEntries)
-                    .ThenInclude(entry => entry.Track)
                 .Where(week => week.OwnerId == ownerId);
         }
 
@@ -38,30 +33,48 @@ namespace ThreeChartsAPI.Features.Charts
             await _context.SaveChangesAsync();
         }
 
-        public async Task AddMusicalEntitiesFromWeekAndSaveChanges(ChartWeek week)
+        public async Task<Track> GetTrackOrCreate(string artist, string title)
         {
-            var artists = week.ChartEntries.Select(e => e.Artist).Where(a => a != null && a.Id == 0);
-            var albums = week.ChartEntries.Select(e => e.Album).Where(a => a != null && a.Id == 0);
-            var tracks = week.ChartEntries.Select(e => e.Track).Where(t => t != null && t.Id == 0);
+            var track = await _context.Tracks.FirstOrDefaultAsync(a =>
+                            a.ArtistName == artist && a.Title == title)
+                        ?? new Track { ArtistName = artist, Title = title };
 
-            var entities = artists.Select(o => o as object).Concat(albums).Concat(tracks);
+            if (track.Id == 0)
+            {
+                await _context.Tracks.AddAsync(track);
+                await _context.SaveChangesAsync();
+            }
 
-            await _context.AddRangeAsync(entities.Where(e => e != null));
-            await _context.SaveChangesAsync();
+            return track;
         }
 
-        public async Task<Track> GetTrackOrCreate(string artist, string title) =>
-            await _context.Tracks.FirstOrDefaultAsync(a =>
-                a.ArtistName == artist && a.Title == title)
-            ?? new Track { ArtistName = artist, Title = title };
+        public async Task<Album> GetAlbumOrCreate(string artist, string title)
+        {
+            var album = await _context.Albums.FirstOrDefaultAsync(a =>
+                            a.ArtistName == artist && a.Title == title)
+                        ?? new Album { ArtistName = artist, Title = title };
 
-        public async Task<Album> GetAlbumOrCreate(string artist, string title) =>
-            await _context.Albums.FirstOrDefaultAsync(a =>
-                a.ArtistName == artist && a.Title == title)
-            ?? new Album { ArtistName = artist, Title = title };
+            if (album.Id == 0)
+            {
+                await _context.Albums.AddAsync(album);
+                await _context.SaveChangesAsync();
+            }
 
-        public async Task<Artist> GetArtistOrCreate(string name) =>
-            await _context.Artists.FirstOrDefaultAsync(a => a.Name == name)
-            ?? new Artist { Name = name };
+            return album;
+        }
+
+        public async Task<Artist> GetArtistOrCreate(string name)
+        {
+            var artist = await _context.Artists.FirstOrDefaultAsync(a => a.Name == name)
+                         ?? new Artist { Name = name };
+
+            if (artist.Id == 0)
+            {
+                await _context.Artists.AddAsync(artist);
+                await _context.SaveChangesAsync();
+            }
+
+            return artist;
+        }
     }
 }

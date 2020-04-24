@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ThreeChartsAPI.Features.Charts;
 
 namespace ThreeChartsAPI.Features.Artwork
 {
@@ -9,19 +10,19 @@ namespace ThreeChartsAPI.Features.Artwork
     [Route("api/artwork")]
     public class ArtworkController : ControllerBase
     {
-        private readonly ThreeChartsContext _context;
+        private readonly ChartRepository _repo;
         private readonly IArtworkService _artworkService;
 
-        public ArtworkController(ThreeChartsContext context, IArtworkService artworkService)
+        public ArtworkController(ChartRepository repo, IArtworkService artworkService)
         {
-            _context = context;
+            _repo = repo;
             _artworkService = artworkService;
         }
         
-        [HttpGet("track/{trackId}")]
-        public async Task<ActionResult> GetTrackArtwork(int trackId)
+        [HttpGet("track/{artist}/{title}")]
+        public async Task<ActionResult> GetTrackArtwork(string artist, string title)
         {
-            var track = await _context.Tracks.FindAsync(trackId);
+            var track = await _repo.GetTrackOrCreate(artist, title);
             if (track == null)
             {
                 return NotFound();
@@ -36,10 +37,10 @@ namespace ThreeChartsAPI.Features.Artwork
             return Redirect(artworkUrl);
         }
 
-        [HttpGet("album/{albumId}")]
-        public async Task<ActionResult> GetAlbumArtwork(int albumId)
+        [HttpGet("album/{artist}/{title}")]
+        public async Task<ActionResult> GetAlbumArtwork(string artist, string title)
         {
-            var album = await _context.Albums.FindAsync(albumId);
+            var album = await _repo.GetAlbumOrCreate(artist, title);
             if (album == null)
             {
                 return NotFound();
@@ -54,10 +55,10 @@ namespace ThreeChartsAPI.Features.Artwork
             return Redirect(artworkUrl);
         }
         
-        [HttpGet("artist/{artistId}")]
-        public async Task<ActionResult> GetArtistArtwork(int artistId)
+        [HttpGet("artist/{name}")]
+        public async Task<ActionResult> GetArtistArtwork(string name)
         {
-            var artist = await _context.Artists.FindAsync(artistId);
+            var artist = await _repo.GetArtistOrCreate(name);
             if (artist == null)
             {
                 return NotFound();

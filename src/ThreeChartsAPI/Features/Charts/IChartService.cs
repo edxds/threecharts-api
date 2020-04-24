@@ -19,7 +19,7 @@ namespace ThreeChartsAPI.Features.Charts
             DateTime? endDate,
             TimeZoneInfo timeZone);
         
-        Task<List<ChartEntry>> CreateEntriesForLastFmCharts(
+        List<ChartEntry> CreateEntriesForLastFmCharts(
             LastFmChart<LastFmChartTrack> trackChart,
             LastFmChart<LastFmChartAlbum> albumChart,
             LastFmChart<LastFmChartArtist> artistChart,

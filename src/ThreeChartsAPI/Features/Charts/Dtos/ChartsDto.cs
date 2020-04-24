@@ -3,42 +3,18 @@ using ThreeChartsAPI.Features.Charts.Models;
 
 namespace ThreeChartsAPI.Features.Charts.Dtos
 {
-    public class TrackEntryDto
+    public class EntryDto
     {
         public int Id { get; set; }
-        public int TrackId { get; set; }
-
+        
+        public ChartEntryType Type { get; set; }
+        
         public int Rank { get; set; }
         public ChartEntryStat Stat { get; set; }
         public string? StatText { get; set; }
-
-        public string Title { get; set; } = null!;
-        public string ArtistName { get; set; } = null!;
-    }
-
-    public class AlbumEntryDto
-    {
-        public int Id { get; set; }
-        public int AlbumId { get; set; }
-
-        public int Rank { get; set; }
-        public ChartEntryStat Stat { get; set; }
-        public string? StatText { get; set; }
-
-        public string Title { get; set; } = null!;
-        public string ArtistName { get; set; } = null!;
-    }
-
-    public class ArtistEntryDto
-    {
-        public int Id { get; set; }
-        public int ArtistId { get; set; }
-
-        public int Rank { get; set; }
-        public ChartEntryStat Stat { get; set; }
-        public string? StatText { get; set; }
-
-        public string Name { get; set; } = null!;
+        
+        public string? Title { get; set; }
+        public string Artist { get; set; } = null!;
     }
 
     public class ChartsDto
@@ -47,8 +23,8 @@ namespace ThreeChartsAPI.Features.Charts.Dtos
         public int WeekId { get; set; }
 
         public int WeekNumber { get; set; }
-        public List<TrackEntryDto> TrackEntries { get; set; } = null!;
-        public List<AlbumEntryDto> AlbumEntries { get; set; } = null!;
-        public List<ArtistEntryDto> ArtistEntries { get; set; } = null!;
+        public List<EntryDto> TrackEntries { get; set; } = null!;
+        public List<EntryDto> AlbumEntries { get; set; } = null!;
+        public List<EntryDto> ArtistEntries { get; set; } = null!;
     }
 }
