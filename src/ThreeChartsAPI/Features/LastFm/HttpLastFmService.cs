@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentResults;
 using ThreeChartsAPI.Features.LastFm.Models;
@@ -36,7 +37,9 @@ namespace ThreeChartsAPI.Features.LastFm
             return url;
         }
 
-        public async Task<Result<LastFmSession>> CreateLastFmSession(string token)
+        public async Task<Result<LastFmSession>> CreateLastFmSession(
+            string token,
+            CancellationToken? cancellationToken = null)
         {
             var method = "auth.getsession";
             var signature = GenerateSignature(
@@ -45,27 +48,32 @@ namespace ThreeChartsAPI.Features.LastFm
                 ("api_key", _apiKey)
             );
 
-            var uri = $"?method={method}&api_key={_apiKey}&token={token}&api_sig={signature}&format=json";
+            var uri =
+                $"?method={method}&api_key={_apiKey}&token={token}&api_sig={signature}&format=json";
             var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            var response = await _httpClient.SendAsync(request);
+            var response = await SendRequest(_httpClient, request, cancellationToken);
 
             if (response.IsSuccessStatusCode)
             {
-                using var stream = await response.Content.ReadAsStreamAsync();
+                await using var stream = await response.Content.ReadAsStreamAsync();
                 return Results.Ok(await _deserializer.DeserializeSession(stream));
             }
 
             return await HandleLastFmError(response);
         }
 
-        public async Task<Result<LastFmUserInfo>> GetUserInfo(string? userName, string? session)
+        public async Task<Result<LastFmUserInfo>> GetUserInfo(
+            string? userName,
+            string? session,
+            CancellationToken? cancellationToken = null)
         {
             var hasUserName = userName != null;
             var hasSession = session != null;
 
             if (!hasUserName && !hasSession)
             {
-                throw new InvalidOperationException("You must pass either a username or a session key.");
+                throw new InvalidOperationException(
+                    "You must pass either a username or a session key.");
             }
 
             var uri = hasUserName
@@ -73,56 +81,71 @@ namespace ThreeChartsAPI.Features.LastFm
                 : $"?method=user.getinfo&api_key={_apiKey}&sk={session}&format=json";
 
             var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            var response = await _httpClient.SendAsync(request);
+            var response = await SendRequest(_httpClient, request, cancellationToken);
 
             if (response.IsSuccessStatusCode)
             {
-                using var stream = await response.Content.ReadAsStreamAsync();
+                await using var stream = await response.Content.ReadAsStreamAsync();
                 return Results.Ok(await _deserializer.DeserializeUserInfo(stream));
             }
 
             return await HandleLastFmError(response);
         }
 
-        public async Task<Result<LastFmChart<LastFmChartAlbum>>> GetWeeklyAlbumChart(string user, long from, long to)
+        public async Task<Result<LastFmChart<LastFmChartAlbum>>> GetWeeklyAlbumChart(
+            string user,
+            long from,
+            long to,
+            CancellationToken? cancellationToken = null)
         {
-            var uri = $"?method=user.getweeklyalbumchart&api_key={_apiKey}&user={user}&from={from}&to={to}&format=json";
+            var uri =
+                $"?method=user.getweeklyalbumchart&api_key={_apiKey}&user={user}&from={from}&to={to}&format=json";
             var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            var response = await _httpClient.SendAsync(request);
+            var response = await SendRequest(_httpClient, request, cancellationToken);
 
             if (response.IsSuccessStatusCode)
             {
-                using var stream = await response.Content.ReadAsStreamAsync();
+                await using var stream = await response.Content.ReadAsStreamAsync();
                 return Results.Ok(await _deserializer.DeserializeAlbumChart(stream));
             }
 
             return await HandleLastFmError(response);
         }
 
-        public async Task<Result<LastFmChart<LastFmChartArtist>>> GetWeeklyArtistChart(string user, long from, long to)
+        public async Task<Result<LastFmChart<LastFmChartArtist>>> GetWeeklyArtistChart(
+            string user,
+            long from,
+            long to,
+            CancellationToken? cancellationToken = null)
         {
-            var uri = $"?method=user.getweeklyartistchart&api_key={_apiKey}&user={user}&from={from}&to={to}&format=json";
+            var uri =
+                $"?method=user.getweeklyartistchart&api_key={_apiKey}&user={user}&from={from}&to={to}&format=json";
             var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            var response = await _httpClient.SendAsync(request);
+            var response = await SendRequest(_httpClient, request, cancellationToken);
 
             if (response.IsSuccessStatusCode)
             {
-                using var stream = await response.Content.ReadAsStreamAsync();
+                await using var stream = await response.Content.ReadAsStreamAsync();
                 return Results.Ok(await _deserializer.DeserializeArtistChart(stream));
             }
 
             return await HandleLastFmError(response);
         }
 
-        public async Task<Result<LastFmChart<LastFmChartTrack>>> GetWeeklyTrackChart(string user, long from, long to)
+        public async Task<Result<LastFmChart<LastFmChartTrack>>> GetWeeklyTrackChart(
+            string user,
+            long from,
+            long to,
+            CancellationToken? cancellationToken = null)
         {
-            var uri = $"?method=user.getweeklytrackchart&api_key={_apiKey}&user={user}&from={from}&to={to}&format=json";
+            var uri =
+                $"?method=user.getweeklytrackchart&api_key={_apiKey}&user={user}&from={from}&to={to}&format=json";
             var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            var response = await _httpClient.SendAsync(request);
+            var response = await SendRequest(_httpClient, request, cancellationToken);
 
             if (response.IsSuccessStatusCode)
             {
-                using var stream = await response.Content.ReadAsStreamAsync();
+                await using var stream = await response.Content.ReadAsStreamAsync();
                 return Results.Ok(await _deserializer.DeserializeTrackChart(stream));
             }
 
@@ -141,6 +164,13 @@ namespace ThreeChartsAPI.Features.LastFm
             }
         }
 
+        private Task<HttpResponseMessage> SendRequest(
+            HttpClient client,
+            HttpRequestMessage request,
+            CancellationToken? token = null) => token != null
+            ? client.SendAsync(request, (CancellationToken) token)
+            : client.SendAsync(request);
+        
         private async Task<Result> HandleLastFmError(HttpResponseMessage response)
         {
             try

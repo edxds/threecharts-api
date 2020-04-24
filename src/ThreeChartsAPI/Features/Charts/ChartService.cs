@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentResults;
 using Microsoft.EntityFrameworkCore;
@@ -28,7 +29,10 @@ namespace ThreeChartsAPI.Features.Charts
             _lastFm = lastFmService;
         }
 
-        public async Task<Result<ChartWeek>> GetLiveWeekFor(User user, DateTime currentTime)
+        public async Task<Result<ChartWeek>> GetLiveWeekFor(
+            User user,
+            DateTime currentTime,
+            CancellationToken? cancellationToken = null)
         {
             var timezone = TZConvert.GetTimeZoneInfo(user.IanaTimezone ?? "");
             if (timezone == null)
@@ -49,9 +53,12 @@ namespace ThreeChartsAPI.Features.Charts
             var fromUnix = ToUnixTimeSeconds(liveWeek.From);
             var toUnix = ToUnixTimeSeconds(liveWeek.To);
 
-            var artistChart = _lastFm.GetWeeklyArtistChart(user.UserName, fromUnix, toUnix);
-            var albumChart = _lastFm.GetWeeklyAlbumChart(user.UserName, fromUnix, toUnix);
-            var trackChart = _lastFm.GetWeeklyTrackChart(user.UserName, fromUnix, toUnix);
+            var artistChart =
+                _lastFm.GetWeeklyArtistChart(user.UserName, fromUnix, toUnix, cancellationToken);
+            var albumChart =
+                _lastFm.GetWeeklyAlbumChart(user.UserName, fromUnix, toUnix, cancellationToken);
+            var trackChart =
+                _lastFm.GetWeeklyTrackChart(user.UserName, fromUnix, toUnix, cancellationToken);
 
             // Allows for parallel running since Tasks are started at call, not at await
             await artistChart;
@@ -73,6 +80,8 @@ namespace ThreeChartsAPI.Features.Charts
             var existingWeeks = await _repo.QueryWeeksWithRelationsOf(user.Id)
                 .ToListAsync();
 
+            cancellationToken?.ThrowIfCancellationRequested();
+            
             var entryId = 1;
             Parallel.ForEach(liveWeek.ChartEntries, entry =>
             {
@@ -90,7 +99,8 @@ namespace ThreeChartsAPI.Features.Charts
             int startWeekNumber,
             DateTime startDate,
             DateTime? endDate,
-            TimeZoneInfo timeZone)
+            TimeZoneInfo timeZone,
+            CancellationToken? cancellationToken = null)
         {
             var newWeeks = _chartDateService.GetChartWeeksInDateRange(
                 startWeekNumber,
@@ -108,24 +118,21 @@ namespace ThreeChartsAPI.Features.Charts
             foreach (var weekChunk in newWeekChunks)
             {
                 var trackChartTasks = weekChunk
-                    .Select(week => _lastFm.GetWeeklyTrackChart(
-                        user.UserName,
-                        ToUnixTimeSeconds(week.From),
-                        ToUnixTimeSeconds(week.To)))
+                    .Select(week => _lastFm.GetWeeklyTrackChart(user.UserName,
+                        ToUnixTimeSeconds(week.From), ToUnixTimeSeconds(week.To),
+                        cancellationToken))
                     .ToList();
 
                 var albumChartTasks = weekChunk
-                    .Select(week => _lastFm.GetWeeklyAlbumChart(
-                        user.UserName,
-                        ToUnixTimeSeconds(week.From),
-                        ToUnixTimeSeconds(week.To)))
+                    .Select(week => _lastFm.GetWeeklyAlbumChart(user.UserName,
+                        ToUnixTimeSeconds(week.From), ToUnixTimeSeconds(week.To),
+                        cancellationToken))
                     .ToList();
 
                 var artistChartTasks = weekChunk
-                    .Select(week => _lastFm.GetWeeklyArtistChart(
-                        user.UserName,
-                        ToUnixTimeSeconds(week.From),
-                        ToUnixTimeSeconds(week.To)))
+                    .Select(week => _lastFm.GetWeeklyArtistChart(user.UserName,
+                        ToUnixTimeSeconds(week.From), ToUnixTimeSeconds(week.To),
+                        cancellationToken))
                     .ToList();
 
                 await Task.WhenAll(trackChartTasks);
@@ -179,6 +186,8 @@ namespace ThreeChartsAPI.Features.Charts
                     entry.StatText = statText;    
                 });
             });
+            
+            cancellationToken?.ThrowIfCancellationRequested();
             
             await _repo.AddWeeksAndSaveChanges(newWeeks);
             return Results.Ok(allWeeks);

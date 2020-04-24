@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using FluentResults;
 using Moq;
 using ThreeChartsAPI.Features.LastFm;
@@ -24,7 +25,8 @@ namespace ThreeChartsAPI.Tests
         {
             Fake
                 .Setup(s =>
-                    s.GetWeeklyTrackChart(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>()))
+                    s.GetWeeklyTrackChart(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>(),
+                        It.IsAny<CancellationToken?>()))
                 .ReturnsAsync(Results.Ok(
                     new LastFmChart<LastFmChartTrack>
                     {
@@ -35,7 +37,8 @@ namespace ThreeChartsAPI.Tests
 
             Fake
                 .Setup(s =>
-                    s.GetWeeklyAlbumChart(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>()))
+                    s.GetWeeklyAlbumChart(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>(),
+                        It.IsAny<CancellationToken?>()))
                 .ReturnsAsync(Results.Ok(
                     new LastFmChart<LastFmChartAlbum> { Entries = Albums })
                 )
@@ -43,7 +46,8 @@ namespace ThreeChartsAPI.Tests
 
             Fake
                 .Setup(s =>
-                    s.GetWeeklyArtistChart(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>()))
+                    s.GetWeeklyArtistChart(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<long>(),
+                        It.IsAny<CancellationToken?>()))
                 .ReturnsAsync(Results.Ok(
                     new LastFmChart<LastFmChartArtist> { Entries = Artists })
                 )

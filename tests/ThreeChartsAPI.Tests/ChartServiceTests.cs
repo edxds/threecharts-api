@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -143,7 +144,8 @@ namespace ThreeChartsAPI.Tests
                 .Verify(lfm => lfm.GetWeeklyTrackChart(
                     It.Is<string>(s => s == "edxds"),
                     It.Is<long>(l => l == new DateTimeOffset(userRegisterDate).ToUnixTimeSeconds()),
-                    It.Is<long>(l => l == new DateTimeOffset(endDate).ToUnixTimeSeconds())));
+                    It.Is<long>(l => l == new DateTimeOffset(endDate).ToUnixTimeSeconds()),
+                    It.IsAny<CancellationToken?>()));
         }
         
         [Fact]

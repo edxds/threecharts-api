@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentResults;
 using ThreeChartsAPI.Features.Charts.Models;
@@ -10,14 +11,18 @@ namespace ThreeChartsAPI.Features.Charts
 {
     public interface IChartService
     {
-        Task<Result<ChartWeek>> GetLiveWeekFor(User user, DateTime currentTime);
+        Task<Result<ChartWeek>> GetLiveWeekFor(
+            User user,
+            DateTime currentTime,
+            CancellationToken? cancellationToken = null);
 
         Task<Result<List<ChartWeek>>> SyncWeeks(
             User user,
             int startWeekNumber,
             DateTime startDate,
             DateTime? endDate,
-            TimeZoneInfo timeZone);
+            TimeZoneInfo timeZone,
+            CancellationToken? cancellationToken = null);
         
         List<ChartEntry> CreateEntriesForLastFmCharts(
             LastFmChart<LastFmChartTrack> trackChart,

@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -68,7 +69,7 @@ namespace ThreeChartsAPI.Features.Charts
         }
 
         [HttpGet("live")]
-        public async Task<ActionResult<ChartsDto>> GetLiveChartForUser()
+        public async Task<ActionResult<ChartsDto>> GetLiveChartForUser(CancellationToken token)
         {
             var userName = User.FindFirst(ClaimTypes.NameIdentifier).Value;
             if (userName == null)

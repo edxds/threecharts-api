@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -117,7 +118,7 @@ namespace ThreeChartsAPI.Features.Users
 
         [HttpPost]
         [Route("sync")]
-        public async Task<ActionResult<UserWeeksDto>> SyncWeeks()
+        public async Task<ActionResult<UserWeeksDto>> SyncWeeks(CancellationToken token)
         {
             var userName = User.FindFirst(ClaimTypes.NameIdentifier).Value;
             if (userName == null)
@@ -141,7 +142,7 @@ namespace ThreeChartsAPI.Features.Users
             
             var latestWeek = await _chartRepository.QueryWeeksOf(user.Id)
                 .OrderByDescending(w => w.WeekNumber)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(token);
             
             if (latestWeek != null)
             {
@@ -150,12 +151,9 @@ namespace ThreeChartsAPI.Features.Users
             }
 
             var userTimeZone = TZConvert.GetTimeZoneInfo(user.IanaTimezone);
-            var syncResult = await _chartService.SyncWeeks(
-                user,
-                startWeekNumber,
-                syncStartDate,
-                null,
-                userTimeZone);
+            var syncResult = await _chartService.SyncWeeks(user: user,
+                startWeekNumber: startWeekNumber, startDate: syncStartDate, endDate: null,
+                timeZone: userTimeZone, cancellationToken: token);
 
             if (syncResult.IsFailed)
             {
