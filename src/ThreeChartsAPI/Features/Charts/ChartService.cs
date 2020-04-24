@@ -74,7 +74,7 @@ namespace ThreeChartsAPI.Features.Charts
                 .ToListAsync();
 
             var entryId = 1;
-            liveWeek.ChartEntries.ForEach(entry =>
+            Parallel.ForEach(liveWeek.ChartEntries, entry =>
             {
                 var (stat, statText) = GetStatsForChartEntry(entry, existingWeeks);
                 entry.Id = entryId++;
@@ -99,12 +99,12 @@ namespace ThreeChartsAPI.Features.Charts
                 timeZone
             );
             
-            var newWeekChunks = ChunkBy(newWeeks, 50);
+            var newWeekChunks = ChunkBy(newWeeks, 500);
 
             var trackChartResults = new List<Result<LastFmChart<LastFmChartTrack>>>();
             var albumChartResults = new List<Result<LastFmChart<LastFmChartAlbum>>>();
             var artistChartResults = new List<Result<LastFmChart<LastFmChartArtist>>>();
-            
+
             foreach (var weekChunk in newWeekChunks)
             {
                 var trackChartTasks = weekChunk
@@ -113,21 +113,21 @@ namespace ThreeChartsAPI.Features.Charts
                         ToUnixTimeSeconds(week.From),
                         ToUnixTimeSeconds(week.To)))
                     .ToList();
-                
+
                 var albumChartTasks = weekChunk
                     .Select(week => _lastFm.GetWeeklyAlbumChart(
                         user.UserName,
                         ToUnixTimeSeconds(week.From),
                         ToUnixTimeSeconds(week.To)))
                     .ToList();
-                
+
                 var artistChartTasks = weekChunk
                     .Select(week => _lastFm.GetWeeklyArtistChart(
                         user.UserName,
                         ToUnixTimeSeconds(week.From),
                         ToUnixTimeSeconds(week.To)))
                     .ToList();
-                
+
                 await Task.WhenAll(trackChartTasks);
                 await Task.WhenAll(albumChartTasks);
                 await Task.WhenAll(artistChartTasks);
@@ -137,15 +137,15 @@ namespace ThreeChartsAPI.Features.Charts
                 artistChartResults.AddRange(artistChartTasks.Select(t => t.Result));
             }
 
-            if (newWeeks.Count != trackChartResults.Count() ||
-                trackChartResults.Count() != albumChartResults.Count() ||
-                trackChartResults.Count() != artistChartResults.Count() ||
-                artistChartResults.Count() != albumChartResults.Count())
+            if (newWeeks.Count != trackChartResults.Count ||
+                trackChartResults.Count != albumChartResults.Count ||
+                trackChartResults.Count != artistChartResults.Count ||
+                artistChartResults.Count != albumChartResults.Count)
             {
                 throw new InvalidOperationException("Chart counts don't match!");
             }
 
-            for (int i = 0; i < newWeeks.Count(); i++)
+            for (int i = 0; i < newWeeks.Count; i++)
             {
                 var week = newWeeks[i];
                 var trackChart = trackChartResults[i];
@@ -167,18 +167,19 @@ namespace ThreeChartsAPI.Features.Charts
                 );
             }
 
-            var entries = newWeeks.SelectMany(week => week.ChartEntries).ToList();
-
             var existingWeeks = await _repo.QueryWeeksWithRelationsOf(user.Id).ToListAsync();
             var allWeeks = existingWeeks.Concat(newWeeks).ToList();
 
-            entries.ForEach(entry =>
+            newWeeks.ForEach(week =>
             {
-                var (stat, statText) = GetStatsForChartEntry(entry, allWeeks);
-                entry.Stat = stat;
-                entry.StatText = statText;
+                Parallel.ForEach(week.ChartEntries, entry =>
+                {
+                    var (stat, statText) = GetStatsForChartEntry(entry, allWeeks);
+                    entry.Stat = stat;
+                    entry.StatText = statText;    
+                });
             });
-
+            
             await _repo.AddWeeksAndSaveChanges(newWeeks);
             return Results.Ok(allWeeks);
         }
