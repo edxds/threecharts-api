@@ -61,7 +61,8 @@ namespace ThreeChartsAPI.Features.Charts
                 currentChartEndDate = GetChartEndDateForStartDate(currentChartStartDate);
             } while (currentChartEndDate < endDate);
 
-            return chartWeekList.TakeLast(50).ToList();
+            // 26 is roughly six months
+            return chartWeekList.TakeLast(26).ToList();
         }
 
         public async Task<List<ChartWeek>> GetOutdatedWeeks(
