@@ -246,14 +246,13 @@ namespace ThreeChartsAPI.Features.Charts
             }
 
             var isFirstWeek = entry.Week.WeekNumber == 1;
-            if (isFirstWeek)
+            var previousWeek = weeks
+                .FirstOrDefault(week => week.WeekNumber == entry.Week.WeekNumber - 1);
+            
+            if (isFirstWeek || previousWeek == null)
             {
                 return (stat: ChartEntryStat.New, statText: null);
             }
-
-            var previousWeek = weeks
-                .Where(week => week.WeekNumber == entry.Week.WeekNumber - 1)
-                .FirstOrDefault();
 
             var entryOnPreviousWeek = previousWeek.ChartEntries
                 .Find(prevEntry =>
