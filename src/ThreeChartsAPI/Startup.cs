@@ -42,7 +42,7 @@ namespace ThreeChartsAPI
                     }
                     else
                     {
-                        builder.WithOrigins("https://threecharts.edxds.co");
+                        builder.WithOrigins("https://3charts.edxds.com");
                     }
 
                     builder.AllowCredentials()
